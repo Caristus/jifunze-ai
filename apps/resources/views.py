@@ -33,8 +33,7 @@ def upload_resource(request):
                 results.append({"name": rel, "topic": topic, "status": "Skipped (unsupported type)", "chunks": 0})
                 continue
             resource = LearningResource.objects.create(
-                institution=membership.institution,
-                uploaded_by=request.user,
+                institution=membership.institution, uploaded_by=request.user,
                 title=title, subject=subject, grade_level=grade, topic=topic,
                 file=uploaded, status=LearningResource.Status.PROCESSING,
             )
@@ -43,24 +42,29 @@ def upload_resource(request):
                 chunks = chunk_text(text) if text else []
                 for i, chunk in enumerate(chunks):
                     DocumentChunk.objects.create(resource=resource, chunk_index=i, chunk_text=chunk)
-                if chunks:
-                    resource.status = LearningResource.Status.READY
-                    status_label = "Processed"
-                else:
-                    resource.status = LearningResource.Status.FAILED
-                    status_label = "No text extracted"
+                resource.status = LearningResource.Status.READY if chunks else LearningResource.Status.FAILED
                 resource.save()
-                results.append({"name": rel, "topic": topic, "status": status_label, "chunks": len(chunks)})
+                results.append({"name": rel, "topic": topic,
+                                "status": "Processed" if chunks else "No text extracted",
+                                "chunks": len(chunks)})
             except Exception as e:
                 resource.status = LearningResource.Status.FAILED
                 resource.save()
-                logger.exception("Bulk upload processing failed for %s", filename)
+                logger.exception("Bulk upload failed for %s", filename)
                 results.append({"name": rel, "topic": topic, "status": f"Failed: {e}", "chunks": 0})
         processed = sum(1 for r in results if r["status"] == "Processed")
         AuditEvent.objects.create(
             institution=membership.institution, actor=request.user,
             action="RESOURCE_BULK_UPLOAD", resource_type="LearningResource",
-            metadata={"files": len(files), "processed": processed},
-        )
+            metadata={"files": len(files), "processed": processed})
         return JsonResponse({"results": results, "processed": processed, "total": len(files)})
     return render(request, "resources/upload.html")
+@login_required(login_url="/accounts/login/")
+def resource_library(request):
+    membership = Membership.objects.filter(user=request.user, is_active=True).first()
+    resources = (
+        LearningResource.objects.filter(institution=membership.institution)
+        .select_related("uploaded_by") if membership else LearningResource.objects.none()
+    )
+    return render(request, "resources/library.html",
+                  {"resources": resources, "institution": membership.institution if membership else None})

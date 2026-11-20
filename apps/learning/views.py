@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Conversation, Message, MessageSource
 from .serializers import ConversationSerializer, ChatInputSerializer, MessageSerializer
+from .retrieval import retrieve_context
 from apps.ai_gateway.services import AIGateway
-from apps.resources.models import DocumentChunk
 from apps.audit.models import AuditEvent
 from apps.institutions.models import Membership
 @login_required(login_url="/accounts/login/")
@@ -33,14 +33,15 @@ class ConversationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         prompt = serializer.validated_data["prompt"]
         Message.objects.create(conversation=conversation, role=Message.Role.USER, content=prompt)
-        from .retrieval import retrieve_context\n        chunks = retrieve_context(prompt, str(conversation.institution.id), top_k=5)
-        gateway = AIGateway()
-        ai_response = gateway.generate_learning_response(prompt, chunks)
+        chunks = retrieve_context(prompt, conversation.institution_id, top_k=5)
+        gateway = AIGateway(institution=conversation.institution)
+        context_text = "\n\n".join(c.chunk_text for c in chunks)
+        content = gateway.generate_learning_response(prompt, context_text)
         assistant_message = Message.objects.create(
             conversation=conversation,
             role=Message.Role.ASSISTANT,
-            content=ai_response["content"],
-            model_provider=ai_response["provider"],
+            content=content,
+            model_provider=gateway.provider.provider_name,
         )
         for chunk in chunks:
             MessageSource.objects.create(
@@ -49,6 +50,5 @@ class ConversationViewSet(viewsets.ModelViewSet):
             institution=conversation.institution, actor=request.user,
             action="AI_LEARNING_QUERY", resource_type="Conversation",
             resource_id=str(conversation.id),
-            metadata={"provider": ai_response["provider"], "chunks_used": len(chunks)})
+            metadata={"provider": gateway.provider.provider_name, "chunks_used": len(chunks)})
         return Response(MessageSerializer(assistant_message).data, status=status.HTTP_201_CREATED)
-
