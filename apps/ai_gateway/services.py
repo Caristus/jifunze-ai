@@ -27,7 +27,7 @@ class AIGateway:
         return MockProvider()
     def _guidance(self, curriculum):
         return self.CURRICULUM_GUIDANCE.get(curriculum, "Align with the school's national curriculum.")
-    def generate_learning_response(self, prompt, context, curriculum="CBC/CBE", grade_level=""):
+    def generate_learning_response(self, prompt, context="", curriculum="CBC/CBE", grade_level=""):
         system = (f"You are a friendly educational assistant for {grade_level or 'secondary'} learners "
                   f"following the {curriculum} curriculum. {self._guidance(curriculum)} "
                   f"Answer ONLY from the provided context. If insufficient, say so honestly.")
@@ -42,3 +42,4 @@ class AIGateway:
             f"Generate a {artifact_type} on {topic} for {grade_level}.",
             system_prompt=system, artifact_type=artifact_type, topic=topic,
             grade_level=grade_level, curriculum=curriculum, mode="teacher")
+

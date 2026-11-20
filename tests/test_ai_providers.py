@@ -22,5 +22,6 @@ def test_ai_gateway_uses_institution_config(test_institution):
     test_institution.save()
     gateway = AIGateway(institution=test_institution)
     assert gateway.provider.provider_name == "mock"
-    response = gateway.generate_learning_response("Test question")
+    response = gateway.generate_learning_response("Test question", context="Test context")
     assert len(response) > 0
+

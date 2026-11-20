@@ -12,7 +12,7 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ["id", "role", "content", "model_provider", "sources", "created_at"]
     def get_sources(self, obj):
-        return MessageSourceSerializer(obj.message_sources.select_related("resource", "chunk")[:5], many=True).data
+        return MessageSourceSerializer(apps.learning.models.MessageSource.objects.filter(message=obj).select_related("resource", "chunk")[:5], many=True).data
 class ChatInputSerializer(serializers.Serializer):
     prompt = serializers.CharField(max_length=2000)
 class ConversationSerializer(serializers.ModelSerializer):
@@ -21,3 +21,5 @@ class ConversationSerializer(serializers.ModelSerializer):
         model = Conversation
         fields = ["id", "title", "institution", "user", "messages", "created_at", "updated_at"]
         read_only_fields = ["id", "institution", "user", "created_at", "updated_at"]
+
+
