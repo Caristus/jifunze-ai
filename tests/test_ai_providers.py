@@ -25,3 +25,4 @@ def test_ai_gateway_uses_institution_config(test_institution):
     response = gateway.generate_learning_response("Test question", context="Test context")
     assert len(response) > 0
 
+

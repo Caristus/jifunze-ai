@@ -23,3 +23,5 @@ class ConversationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "institution", "user", "created_at", "updated_at"]
 
 
+
+

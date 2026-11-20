@@ -43,3 +43,4 @@ class AIGateway:
             system_prompt=system, artifact_type=artifact_type, topic=topic,
             grade_level=grade_level, curriculum=curriculum, mode="teacher")
 
+
