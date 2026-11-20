@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold text-slate-900">Karibu, {{ user.get_full_name|default:user.username }}</h1>
+<p class="text-sm text-slate-500 mb-6">Role: <span class="font-medium text-teal-700">{{ user.get_role_display }}</span>
+  {% if institution %} · Institution: <span class="font-medium">{{ institution.name }}</span>{% endif %}</p>
+<div class="grid md:grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-lg shadow p-5"><p class="text-sm text-slate-500">Learning conversations</p><p class="text-3xl font-bold text-slate-900">{{ conversations }}</p></div>
+  <div class="bg-white rounded-lg shadow p-5"><p class="text-sm text-slate-500">Teaching artifacts</p><p class="text-3xl font-bold text-slate-900">{{ artifacts }}</p></div>
+  <div class="bg-white rounded-lg shadow p-5"><p class="text-sm text-slate-500">Audited AI events</p><p class="text-3xl font-bold text-slate-900">{{ audit }}</p></div>
+</div>
+<div class="flex gap-3 flex-wrap">
+  <a href="/learn/" class="bg-teal-600 hover:bg-teal-500 text-white rounded px-4 py-2 text-sm">Open Learning Companion</a>
+  {% if user.role != 'learner' %}<a href="/studio/" class="bg-slate-900 hover:bg-slate-700 text-white rounded px-4 py-2 text-sm">Open Teacher Studio</a>{% endif %}
+  {% if user.role == 'school_admin' or user.role == 'admin' %}<a href="/governance/" class="border border-slate-300 rounded px-4 py-2 text-sm">Data Sovereignty Centre</a>{% endif %}
+</div>
+{% endblock %}

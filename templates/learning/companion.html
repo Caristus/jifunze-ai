@@ -1,0 +1,79 @@
+﻿{% extends "base.html" %}
+{% block title %}Learning Companion — JIFUNZE AI{% endblock %}
+{% block content %}
+<div class="grid md:grid-cols-4 gap-4 h-[70vh]">
+  <aside class="bg-white rounded-lg shadow p-3 overflow-y-auto">
+    <button id="newchat" class="w-full bg-teal-600 hover:bg-teal-500 text-white rounded py-2 text-sm mb-3">+ New conversation</button>
+    <div id="convlist" class="space-y-1"></div>
+  </aside>
+  <section class="md:col-span-3 bg-white rounded-lg shadow flex flex-col">
+    <div id="chat" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+    <div class="border-t p-3 flex gap-2">
+      <input id="prompt" class="flex-1 border rounded px-3 py-2 text-sm" placeholder="Ask anything about your school subjects...">
+      <button id="send" class="bg-teal-600 hover:bg-teal-500 text-white rounded px-4 py-2 text-sm">Send</button>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const csrf = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || '';
+const api = (url, opts={}) => fetch(url, Object.assign({headers:{'X-CSRFToken': csrf, 'Content-Type':'application/json'}}, opts))
+  .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+let current = null;
+function bubble(role, text, sources){
+  const wrap = document.createElement('div');
+  wrap.className = 'flex flex-col ' + (role==='user' ? 'items-end' : 'items-start');
+  const box = document.createElement('div');
+  box.className = 'max-w-[80%] rounded-lg px-4 py-2 text-sm whitespace-pre-wrap ' +
+    (role==='user' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-800');
+  box.textContent = text;
+  wrap.appendChild(box);
+  if (sources && sources.length){
+    const s = document.createElement('div');
+    s.className = 'mt-1 text-xs text-slate-500';
+    s.textContent = 'Sources: ' + sources.map(x => x.resource_title).join(', ');
+    wrap.appendChild(s);
+  }
+  return wrap;
+}
+function render(msgs){
+  const box = document.getElementById('chat'); box.innerHTML = '';
+  msgs.forEach(m => box.appendChild(bubble(m.role, m.content, m.sources)));
+  box.scrollTop = box.scrollHeight;
+}
+async function loadConvs(){
+  const d = await api('/api/learning/conversations/');
+  const list = d.results || d;
+  const el = document.getElementById('convlist'); el.innerHTML = '';
+  list.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'w-full text-left px-3 py-2 rounded hover:bg-slate-100 text-sm truncate';
+    b.textContent = c.title; b.onclick = () => openConv(c.id);
+    el.appendChild(b);
+  });
+  if (!current && list.length) openConv(list[0].id);
+}
+async function openConv(id){
+  current = id;
+  const d = await api('/api/learning/conversations/' + id + '/');
+  render(d.messages || []);
+}
+async function send(){
+  const input = document.getElementById('prompt');
+  const text = input.value.trim(); if (!text) return; input.value = '';
+  if (!current){
+    const c = await api('/api/learning/conversations/', {method:'POST', body: JSON.stringify({title: text.slice(0,60)})});
+    current = c.id; loadConvs();
+  }
+  const box = document.getElementById('chat');
+  box.appendChild(bubble('user', text, [])); box.scrollTop = box.scrollHeight;
+  const r = await api('/api/learning/conversations/' + current + '/chat/', {method:'POST', body: JSON.stringify({prompt: text})});
+  box.appendChild(bubble('assistant', r.content, r.sources)); box.scrollTop = box.scrollHeight;
+}
+document.getElementById('send').onclick = send;
+document.getElementById('prompt').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+document.getElementById('newchat').onclick = () => { current = null; render([]); };
+loadConvs();
+</script>
+{% endblock %}

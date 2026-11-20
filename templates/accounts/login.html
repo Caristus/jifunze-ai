@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto mt-10 bg-white rounded-lg shadow p-8">
+  <h1 class="text-2xl font-bold text-slate-900 mb-1">JIFUNZE AI</h1>
+  <p class="text-sm text-slate-500 mb-6">Intelligence for everyone. Knowledge without boundaries.</p>
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    <div><label class="text-sm font-medium">Username</label>
+      <input name="username" class="mt-1 w-full border rounded px-3 py-2" required></div>
+    <div><label class="text-sm font-medium">Password</label>
+      <input name="password" type="password" class="mt-1 w-full border rounded px-3 py-2" required></div>
+    {% if form.errors %}<p class="text-red-600 text-sm">Invalid credentials.</p>{% endif %}
+    <button class="w-full bg-teal-600 hover:bg-teal-500 text-white rounded py-2 font-medium">Sign in</button>
+  </form>
+</div>
+{% endblock %}

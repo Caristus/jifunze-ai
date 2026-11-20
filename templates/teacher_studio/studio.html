@@ -1,0 +1,43 @@
+﻿{% extends "base.html" %}
+{% block title %}Teacher Studio — JIFUNZE AI{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-slate-900 mb-4">Teacher Studio</h1>
+<div class="grid md:grid-cols-3 gap-4">
+  <form id="genform" class="bg-white rounded-lg shadow p-5 space-y-3 md:col-span-1">
+    <div><label class="text-sm font-medium">Artifact type</label>
+      <select id="atype" class="mt-1 w-full border rounded px-3 py-2">
+        <option value="lesson_plan">Lesson Plan</option><option value="quiz">Quiz</option>
+        <option value="worksheet">Worksheet</option><option value="marking_guide">Marking Guide</option>
+        <option value="activity">Learning Activity</option>
+      </select></div>
+    <div><label class="text-sm font-medium">Topic</label>
+      <input id="topic" class="mt-1 w-full border rounded px-3 py-2" placeholder="e.g. Photosynthesis"></div>
+    <div><label class="text-sm font-medium">Grade level</label>
+      <input id="grade" class="mt-1 w-full border rounded px-3 py-2" placeholder="e.g. Form 2"></div>
+    <div><label class="text-sm font-medium">Curriculum</label>
+      <input id="curr" class="mt-1 w-full border rounded px-3 py-2" value="CBC/CBE"></div>
+    <button class="w-full bg-teal-600 hover:bg-teal-500 text-white rounded py-2">Generate</button>
+  </form>
+  <div class="md:col-span-2 bg-white rounded-lg shadow p-5 overflow-y-auto max-h-[70vh]">
+    <pre id="output" class="whitespace-pre-wrap text-sm text-slate-700">Generated material will appear here.</pre>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const csrf = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || '';
+document.getElementById('genform').onsubmit = async (e) => {
+  e.preventDefault();
+  const body = {
+    artifact_type: document.getElementById('atype').value,
+    topic: document.getElementById('topic').value,
+    grade_level: document.getElementById('grade').value,
+    curriculum: document.getElementById('curr').value
+  };
+  const r = await fetch('/api/teacher/artifacts/generate/', {
+    method:'POST', headers:{'X-CSRFToken': csrf, 'Content-Type':'application/json'}, body: JSON.stringify(body)
+  }).then(r => r.json());
+  document.getElementById('output').textContent = r.content || JSON.stringify(r, null, 2);
+};
+</script>
+{% endblock %}

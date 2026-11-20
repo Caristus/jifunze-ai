@@ -1,0 +1,112 @@
+﻿{% extends "base.html" %}
+{% block title %}Upload Resources — JIFUNZE AI{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold text-slate-900 mb-1">Upload Learning Resources</h1>
+<p class="text-sm text-slate-500 mb-6">Bulk upload files or an entire folder. Sub-folders become topics automatically (e.g. Biology &gt; Form 2).</p>
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="md:col-span-2 bg-white rounded-lg shadow p-6">
+    <div id="dropzone" class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center text-slate-500">
+      <p class="mb-4">Drag &amp; drop files here, or:</p>
+      <div class="flex gap-3 justify-center flex-wrap">
+        <button type="button" id="btnFiles" class="bg-teal-600 hover:bg-teal-500 text-white rounded px-4 py-2 text-sm">Select Files</button>
+        <button type="button" id="btnFolder" class="bg-slate-900 hover:bg-slate-700 text-white rounded px-4 py-2 text-sm">Select Entire Folder</button>
+      </div>
+      <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md" class="hidden">
+      <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+    </div>
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <div><label class="text-sm font-medium">Default subject (optional)</label>
+        <input id="subject" class="mt-1 w-full border rounded px-3 py-2" placeholder="Used when no folder name"></div>
+      <div><label class="text-sm font-medium">Default grade level (optional)</label>
+        <input id="grade" class="mt-1 w-full border rounded px-3 py-2" placeholder="e.g. Form 2"></div>
+    </div>
+    <div class="mt-4">
+      <div class="flex items-center justify-between text-sm mb-1">
+        <span id="count" class="text-slate-600">0 files selected</span>
+        <button type="button" id="clear" class="text-red-600 text-sm">Clear</button>
+      </div>
+      <div class="max-h-48 overflow-y-auto border rounded">
+        <table class="w-full text-xs"><tbody id="preview"></tbody></table>
+      </div>
+    </div>
+    <div class="mt-4 w-full bg-slate-200 rounded h-2 hidden" id="barwrap">
+      <div id="bar" class="bg-teal-600 h-2 rounded" style="width:0%"></div>
+    </div>
+    <button id="submit" class="mt-4 w-full bg-teal-600 hover:bg-teal-500 text-white rounded py-2 font-medium">Upload &amp; Process All</button>
+  </div>
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="font-semibold text-slate-900 mb-2">How topics are derived</h2>
+    <ul class="text-sm text-slate-600 list-disc pl-4 space-y-1">
+      <li>Folder <code>Biology/Form 2/</code> → topic <code>Biology &gt; Form 2</code></li>
+      <li>1st folder level = subject (if no default typed).</li>
+      <li>2nd folder level = grade (if no default typed).</li>
+      <li>Supported: PDF, DOCX, TXT, MD.</li>
+    </ul>
+    <div id="results" class="mt-4"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const csrf = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || '';
+let selected = [];
+const fi = document.getElementById('fileInput');
+const di = document.getElementById('folderInput');
+document.getElementById('btnFiles').onclick = () => fi.click();
+document.getElementById('btnFolder').onclick = () => di.click();
+fi.onchange = e => addFiles(e.target.files);
+di.onchange = e => addFiles(e.target.files);
+const dz = document.getElementById('dropzone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('border-teal-500'); };
+dz.ondragleave = () => dz.classList.remove('border-teal-500');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('border-teal-500'); addFiles(e.dataTransfer.files); };
+function addFiles(list){
+  for (const f of list){
+    const path = f.webkitRelativePath || f.name;
+    if (!selected.some(s => s.path === path)) selected.push({file: f, path: path});
+  }
+  renderPreview();
+}
+function renderPreview(){
+  const tb = document.getElementById('preview');
+  tb.innerHTML = '';
+  selected.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-t';
+    tr.innerHTML = '<td class="px-2 py-1">' + s.path + '</td><td class="px-2 py-1 text-right">' + (s.file.size/1024).toFixed(1) + ' KB</td><td class="px-2 py-1"><button class="text-red-600" data-i="' + i + '">x</button></td>';
+    tr.querySelector('button').onclick = () => { selected.splice(i,1); renderPreview(); };
+    tb.appendChild(tr);
+  });
+  document.getElementById('count').textContent = selected.length + ' files selected';
+}
+document.getElementById('clear').onclick = () => { selected = []; renderPreview(); };
+document.getElementById('submit').onclick = () => {
+  if (!selected.length){ alert('Select files or a folder first.'); return; }
+  const fd = new FormData();
+  selected.forEach(item => { fd.append('files', item.file, item.file.name); fd.append('paths', item.path); });
+  fd.append('subject', document.getElementById('subject').value);
+  fd.append('grade_level', document.getElementById('grade').value);
+  fd.append('csrfmiddlewaretoken', csrf);
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/upload/');
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+  document.getElementById('barwrap').classList.remove('hidden');
+  xhr.upload.onprogress = e => { if (e.lengthComputable) document.getElementById('bar').style.width = Math.round(e.loaded/e.total*100) + '%'; };
+  xhr.onload = () => {
+    document.getElementById('bar').style.width = '100%';
+    const data = JSON.parse(xhr.responseText);
+    renderResults(data.results, data.processed, data.total);
+    selected = []; renderPreview();
+  };
+  xhr.send(fd);
+};
+function renderResults(results, processed, total){
+  let html = '<h3 class="font-semibold text-slate-900 text-sm mb-2">Processed ' + processed + ' of ' + total + '</h3><table class="w-full text-xs"><tbody>';
+  results.forEach(r => {
+    html += '<tr class="border-t"><td class="py-1 pr-2">' + r.name + '</td><td class="py-1 pr-2 text-slate-500">' + (r.topic || '-') + '</td><td class="py-1">' + r.status + ' (' + r.chunks + ' chunks)</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('results').innerHTML = html;
+}
+</script>
+{% endblock %}
