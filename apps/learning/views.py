@@ -33,7 +33,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         prompt = serializer.validated_data["prompt"]
         Message.objects.create(conversation=conversation, role=Message.Role.USER, content=prompt)
-        chunks = list(DocumentChunk.objects.filter(resource__institution=conversation.institution)[:10])
+        from .retrieval import retrieve_context\n        chunks = retrieve_context(prompt, str(conversation.institution.id), top_k=5)
         gateway = AIGateway()
         ai_response = gateway.generate_learning_response(prompt, chunks)
         assistant_message = Message.objects.create(
@@ -51,3 +51,4 @@ class ConversationViewSet(viewsets.ModelViewSet):
             resource_id=str(conversation.id),
             metadata={"provider": ai_response["provider"], "chunks_used": len(chunks)})
         return Response(MessageSerializer(assistant_message).data, status=status.HTTP_201_CREATED)
+

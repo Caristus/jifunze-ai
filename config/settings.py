@@ -59,10 +59,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 # Database - SQLite for Day 1 local development. PostgreSQL from Day 2 onward.
+import os
+from dotenv import load_dotenv
+load_dotenv()
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+if os.getenv("USE_POSTGRES") == "True":
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "jifunze"),
+        "USER": os.getenv("POSTGRES_USER", "jifunze_user"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "jifunze_password"),
+        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 # PostgreSQL + pgvector configuration (uncomment to use with docker-compose)
@@ -123,4 +136,5 @@ LOGGING = {
     },
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
 
