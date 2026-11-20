@@ -3,57 +3,42 @@ from apps.institutions.models import Institution
 import logging
 logger = logging.getLogger(__name__)
 class AIGateway:
-    """Central AI orchestration layer with provider abstraction."""
-    PROVIDERS = {
-        "mock": MockProvider,
-        "ollama": OllamaProvider,
+    """Provider-independent AI gateway with curriculum-aware prompting."""
+    PROVIDERS = {"mock": MockProvider, "ollama": OllamaProvider}
+    CURRICULUM_GUIDANCE = {
+        "CBC/CBE": "Use competency-based language: learning outcomes, core competencies, "
+                   "formative assessment, and practical activities.",
+        "8-4-4": "Use knowledge-retention framing: objectives, content coverage, and "
+                 "national-exam style questions.",
+        "Cambridge IGCSE": "Use Cambridge terminology: learning objectives, syllabus "
+                           "reference, structured questions, and mark schemes.",
+        "IB": "Use inquiry-based framing: concepts, ATL skills, and global context.",
+        "CAPS": "Use South African CAPS terminology: outcomes, assessments, and "
+                "work schedules.",
     }
     def __init__(self, institution: Institution = None):
         self.institution = institution
         self.provider = self._get_provider()
     def _get_provider(self):
-        """Get provider based on institution configuration."""
-        if self.institution and hasattr(self.institution, "ai_provider"):
-            provider_name = self.institution.ai_provider or "mock"
-            model = getattr(self.institution, "ai_model", None)
-        else:
-            provider_name = "mock"
-            model = None
-        provider_class = self.PROVIDERS.get(provider_name, MockProvider)
-        if provider_name == "ollama":
-            return provider_class(model=model or "llama3.2")
-        return provider_class()
-    def generate_learning_response(self, message: str, context: str = None) -> str:
-        """Generate grounded learning response."""
-        system_prompt = """You are a helpful educational assistant for African schools.
-You answer questions based ONLY on the provided context from the school's approved materials.
-If the context doesn't contain the answer, say so clearly rather than guessing.
-Keep responses age-appropriate and aligned with local curricula (CBC/CBE, Cambridge)."""
-        full_prompt = message
-        if context:
-            full_prompt = f"Context from school materials:\n{context}\n\nQuestion: {message}"
+        name = getattr(self.institution, "ai_provider", "mock") or "mock"
+        model = getattr(self.institution, "ai_model", None)
+        if name == "ollama":
+            return OllamaProvider(model=model or "llama3.2")
+        return MockProvider()
+    def _guidance(self, curriculum):
+        return self.CURRICULUM_GUIDANCE.get(curriculum, "Align with the school's national curriculum.")
+    def generate_learning_response(self, prompt, context, curriculum="CBC/CBE", grade_level=""):
+        system = (f"You are a friendly educational assistant for {grade_level or 'secondary'} learners "
+                  f"following the {curriculum} curriculum. {self._guidance(curriculum)} "
+                  f"Answer ONLY from the provided context. If insufficient, say so honestly.")
+        full = f"Context from approved school materials:\n{context}\n\nLearner question: {prompt}"
+        return self.provider.generate(full, system_prompt=system,
+                                      curriculum=curriculum, grade_level=grade_level, mode="learner")
+    def generate_teacher_artifact(self, artifact_type, topic, grade_level, curriculum="CBC/CBE"):
+        system = (f"You are an expert {curriculum} curriculum designer. {self._guidance(curriculum)} "
+                  f"Create a classroom-ready {artifact_type} for {grade_level} on: {topic}. "
+                  f"Include objectives, activities, and assessment.")
         return self.provider.generate(
-            prompt=full_prompt,
-            system_prompt=system_prompt,
-            context_preview=context
-        )
-    def generate_teacher_artifact(self, artifact_type: str, topic: str, grade_level: str, curriculum: str = "CBC/CBE") -> str:
-        """Generate teaching materials."""
-        curriculum_context = f" for {curriculum}" if curriculum else ""
-        system_prompt = f"""You are an expert curriculum designer for {curriculum}.\n\nSpecific {curriculum} Guidelines:\n- If CBC/CBE: Focus on competency-based outcomes, practical activities, and formative assessment.\n- If Cambridge: Focus on rigorous academic objectives, past-paper style questions, and structured marking schemes.\n- If 8-4-4: Focus on traditional knowledge retention and national exam formats.\n\nCreate high-quality {artifact_type}s that are:
-Create high-quality {artifact_type}s that are:
-- Age-appropriate for {grade_level}
-- Aligned with {curriculum or 'local educational standards'}
-- Engaging and practical for classroom use"""
-        prompt = f"""Create a {artifact_type} for {grade_level} on the topic: {topic}
-Include:
-- Clear learning objectives
-- Structured content with examples
-- Assessment questions or activities
-- Teacher notes or facilitation guidance"""
-        return self.provider.generate(
-            prompt=prompt,
-            system_prompt=system_prompt
-        )
-
-
+            f"Generate a {artifact_type} on {topic} for {grade_level}.",
+            system_prompt=system, artifact_type=artifact_type, topic=topic,
+            grade_level=grade_level, curriculum=curriculum, mode="teacher")

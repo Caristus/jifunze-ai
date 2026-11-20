@@ -19,6 +19,7 @@ def upload_resource(request):
         paths = request.POST.getlist("paths")
         default_subject = request.POST.get("subject", "").strip()
         default_grade = request.POST.get("grade_level", "").strip()
+        default_curriculum = request.POST.get("curriculum", "CBC/CBE").strip()
         results = []
         for index, uploaded in enumerate(files):
             rel = (paths[index] if index < len(paths) else uploaded.name).replace("\\", "/")
@@ -34,7 +35,7 @@ def upload_resource(request):
                 continue
             resource = LearningResource.objects.create(
                 institution=membership.institution, uploaded_by=request.user,
-                title=title, subject=subject, grade_level=grade, topic=topic,
+                title=title, subject=subject, grade_level=grade, topic=topic, curriculum=default_curriculum,
                 file=uploaded, status=LearningResource.Status.PROCESSING,
             )
             try:
@@ -68,3 +69,5 @@ def resource_library(request):
     )
     return render(request, "resources/library.html",
                   {"resources": resources, "institution": membership.institution if membership else None})
+
+

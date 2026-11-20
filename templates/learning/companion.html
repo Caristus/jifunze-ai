@@ -1,7 +1,7 @@
 ﻿{% extends "base.html" %}
 {% block title %}Learning Companion — JIFUNZE AI{% endblock %}
 {% block content %}
-<div class="grid md:grid-cols-4 gap-4 h-[70vh]">
+<div class="grid md:grid-cols-4 gap-4 h-[75vh]">
   <aside class="bg-white rounded-lg shadow p-3 overflow-y-auto">
     <button id="newchat" class="w-full bg-teal-600 hover:bg-teal-500 text-white rounded py-2 text-sm mb-3">+ New conversation</button>
     <div id="convlist" class="space-y-1"></div>
@@ -14,6 +14,14 @@
     </div>
   </section>
 </div>
+<style>
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px);} to {opacity:1; transform:none;} }
+  .fade-in { animation: fadeIn .3s ease; }
+  .dot { width:6px; height:6px; background:#94a3b8; border-radius:50%; display:inline-block; margin:0 2px; animation: blink 1.2s infinite; }
+  .dot:nth-child(2){ animation-delay:.2s } .dot:nth-child(3){ animation-delay:.4s }
+  @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+  .src-chip { display:inline-flex; align-items:center; gap:4px; background:#f0fdfa; border:1px solid #99f6e4; color:#0f766e; font-size:11px; padding:2px 8px; border-radius:9999px; }
+</style>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -23,19 +31,31 @@ const api = (url, opts={}) => fetch(url, Object.assign({headers:{'X-CSRFToken': 
 let current = null;
 function bubble(role, text, sources){
   const wrap = document.createElement('div');
-  wrap.className = 'flex flex-col ' + (role==='user' ? 'items-end' : 'items-start');
+  wrap.className = 'flex flex-col fade-in ' + (role==='user' ? 'items-end' : 'items-start');
   const box = document.createElement('div');
-  box.className = 'max-w-[80%] rounded-lg px-4 py-2 text-sm whitespace-pre-wrap ' +
+  box.className = 'max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap shadow-sm ' +
     (role==='user' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-800');
   box.textContent = text;
   wrap.appendChild(box);
   if (sources && sources.length){
     const s = document.createElement('div');
-    s.className = 'mt-1 text-xs text-slate-500';
-    s.textContent = 'Sources: ' + sources.map(x => x.resource_title).join(', ');
+    s.className = 'mt-2 flex flex-wrap gap-1';
+    sources.slice(0,3).forEach(x => {
+      const chip = document.createElement('span');
+      chip.className = 'src-chip';
+      chip.title = (x.chunk_excerpt||'').slice(0,200);
+      chip.textContent = '📄 ' + x.resource_title;
+      s.appendChild(chip);
+    });
     wrap.appendChild(s);
   }
   return wrap;
+}
+function thinking(){
+  const w = document.createElement('div');
+  w.className = 'flex items-start fade-in'; w.id = 'thinking';
+  w.innerHTML = '<div class="bg-slate-100 rounded-2xl px-4 py-3"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+  return w;
 }
 function render(msgs){
   const box = document.getElementById('chat'); box.innerHTML = '';
@@ -54,22 +74,21 @@ async function loadConvs(){
   });
   if (!current && list.length) openConv(list[0].id);
 }
-async function openConv(id){
-  current = id;
-  const d = await api('/api/learning/conversations/' + id + '/');
-  render(d.messages || []);
-}
+async function openConv(id){ current = id;
+  const d = await api('/api/learning/conversations/' + id + '/'); render(d.messages || []); }
 async function send(){
   const input = document.getElementById('prompt');
   const text = input.value.trim(); if (!text) return; input.value = '';
-  if (!current){
-    const c = await api('/api/learning/conversations/', {method:'POST', body: JSON.stringify({title: text.slice(0,60)})});
-    current = c.id; loadConvs();
-  }
+  if (!current){ const c = await api('/api/learning/conversations/', {method:'POST', body: JSON.stringify({title: text.slice(0,60)})});
+    current = c.id; loadConvs(); }
   const box = document.getElementById('chat');
-  box.appendChild(bubble('user', text, [])); box.scrollTop = box.scrollHeight;
-  const r = await api('/api/learning/conversations/' + current + '/chat/', {method:'POST', body: JSON.stringify({prompt: text})});
-  box.appendChild(bubble('assistant', r.content, r.sources)); box.scrollTop = box.scrollHeight;
+  box.appendChild(bubble('user', text, []));
+  const th = thinking(); box.appendChild(th); box.scrollTop = box.scrollHeight;
+  try {
+    const r = await api('/api/learning/conversations/' + current + '/chat/', {method:'POST', body: JSON.stringify({prompt: text})});
+    th.remove();
+    box.appendChild(bubble('assistant', r.content, r.sources)); box.scrollTop = box.scrollHeight;
+  } catch(e){ th.remove(); box.appendChild(bubble('assistant', 'Sorry, something went wrong. Please try again.', [])); }
 }
 document.getElementById('send').onclick = send;
 document.getElementById('prompt').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });

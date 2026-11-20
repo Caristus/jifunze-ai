@@ -15,11 +15,29 @@
     <div><label class="text-sm font-medium">Grade level</label>
       <input id="grade" class="mt-1 w-full border rounded px-3 py-2" placeholder="e.g. Form 2"></div>
     <div><label class="text-sm font-medium">Curriculum</label>
-      <input id="curr" class="mt-1 w-full border rounded px-3 py-2" value="CBC/CBE"></div>
+      <select id="curr" class="mt-1 w-full border rounded px-3 py-2">
+        <option value="CBC/CBE">Kenya - CBC (Competency-Based Curriculum)</option>
+        <option value="8-4-4">Kenya - 8-4-4 System</option>
+        <option value="Cambridge IGCSE">Cambridge IGCSE / A-Level</option>
+        <option value="IB">International Baccalaureate (IB)</option>
+        <option value="CAPS">South Africa - CAPS</option>
+        <option value="NECTA">Tanzania - NECTA</option>
+        <option value="NCDC">Uganda - NCDC</option>
+        <option value="NERDC">Nigeria - NERDC</option>
+        <option value="NaCCA">Ghana - NaCCA</option>
+        <option value="ZIMSEC">Zimbabwe - ZIMSEC</option>
+        <option value="WAEC">West Africa - WAEC/WASSCE</option>
+        <option value="Edexcel">Edexcel International</option>
+        <option value="Common Core">USA - Common Core</option>
+      </select></div>
     <button class="w-full bg-teal-600 hover:bg-teal-500 text-white rounded py-2">Generate</button>
   </form>
   <div class="md:col-span-2 bg-white rounded-lg shadow p-5 overflow-y-auto max-h-[70vh]">
-    <pre id="output" class="whitespace-pre-wrap text-sm text-slate-700">Generated material will appear here.</pre>
+    <div class="flex gap-2 mb-3">
+    <button id="copyBtn" class="hidden text-xs border border-slate-300 rounded px-3 py-1 hover:bg-slate-50">Copy</button>
+    <button id="dlBtn" class="hidden text-xs border border-slate-300 rounded px-3 py-1 hover:bg-slate-50">Download .md</button>
+  </div>
+  <pre id="output" class="whitespace-pre-wrap text-sm text-slate-700 font-sans">Generated material will appear here.</pre>
   </div>
 </div>
 {% endblock %}
@@ -38,6 +56,14 @@ document.getElementById('genform').onsubmit = async (e) => {
     method:'POST', headers:{'X-CSRFToken': csrf, 'Content-Type':'application/json'}, body: JSON.stringify(body)
   }).then(r => r.json());
   document.getElementById('output').textContent = r.content || JSON.stringify(r, null, 2);
+  const copy = document.getElementById('copyBtn'), dl = document.getElementById('dlBtn');
+  copy.classList.remove('hidden'); dl.classList.remove('hidden');
+  copy.onclick = () => navigator.clipboard.writeText(r.content || '');
+  dl.onclick = () => { const blob = new Blob([r.content||''], {type:'text/markdown'}); const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = (r.topic||'artifact') + '.md'; a.click(); };
 };
 </script>
 {% endblock %}
+
+
+

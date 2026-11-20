@@ -36,7 +36,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
         chunks = retrieve_context(prompt, conversation.institution_id, top_k=5)
         gateway = AIGateway(institution=conversation.institution)
         context_text = "\n\n".join(c.chunk_text for c in chunks)
-        content = gateway.generate_learning_response(prompt, context_text)
+        curriculum = getattr(chunks[0].resource, "curriculum", "CBC/CBE") if chunks else "CBC/CBE"
+        grade = getattr(chunks[0].resource, "grade_level", "") if chunks else ""
+        content = gateway.generate_learning_response(prompt, context_text, curriculum=curriculum, grade_level=grade)
         assistant_message = Message.objects.create(
             conversation=conversation,
             role=Message.Role.ASSISTANT,
@@ -52,3 +54,4 @@ class ConversationViewSet(viewsets.ModelViewSet):
             resource_id=str(conversation.id),
             metadata={"provider": gateway.provider.provider_name, "chunks_used": len(chunks)})
         return Response(MessageSerializer(assistant_message).data, status=status.HTTP_201_CREATED)
+

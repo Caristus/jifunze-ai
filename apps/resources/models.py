@@ -14,6 +14,7 @@ class LearningResource(models.Model):
     subject = models.CharField(max_length=100, blank=True)
     grade_level = models.CharField(max_length=50, blank=True)
     topic = models.CharField(max_length=255, blank=True, help_text="Folder hierarchy, e.g. Biology > Form 2")
+    curriculum = models.CharField(max_length=100, blank=True, default="CBC/CBE")
     file = models.FileField(upload_to="resources/%Y/%m/")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.UPLOADED)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,3 +34,4 @@ class DocumentChunk(models.Model):
         ordering = ["chunk_index"]
     def __str__(self):
         return f"Chunk {self.chunk_index} of {self.resource.title}"
+
