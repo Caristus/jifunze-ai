@@ -1,0 +1,21 @@
+﻿{
+  "name": "JIFUNZE AI",
+  "short_name": "JIFUNZE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "description": "Open-source AI learning infrastructure for African schools",
+  "icons": [
+    {
+      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4da.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/144x144/1f4da.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ]
+}

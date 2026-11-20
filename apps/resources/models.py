@@ -25,8 +25,10 @@ class DocumentChunk(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     resource = models.ForeignKey(LearningResource, on_delete=models.CASCADE, related_name="chunks")
     chunk_text = models.TextField()
+    # embedding = VectorField(dimensions=384, null=True, blank=True, help_text="pgvector embedding for semantic search")
     chunk_index = models.IntegerField(default=0)
     class Meta:
         ordering = ["chunk_index"]
     def __str__(self):
         return f"Chunk {self.chunk_index} of {self.resource.title}"
+

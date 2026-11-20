@@ -65,6 +65,18 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+# PostgreSQL + pgvector configuration (uncomment to use with docker-compose)
+# import os
+# if os.getenv("USE_POSTGRES") == "True":
+#     DATABASES["default"] = {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("POSTGRES_DB", "jifunze"),
+#         "USER": os.getenv("POSTGRES_USER", "jifunze_user"),
+#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "jifunze_password"),
+#         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+#         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+#     }
+}
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -111,3 +123,4 @@ LOGGING = {
     },
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
