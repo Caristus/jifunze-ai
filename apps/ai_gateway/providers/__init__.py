@@ -1,13 +1,4 @@
-﻿from abc import ABC, abstractmethod
-from typing import Optional
-class BaseProvider(ABC):
-    """Abstract base class for AI providers."""
-    @abstractmethod
-    def generate(self, prompt: str, system_prompt: Optional[str] = None, **kwargs) -> str:
-        """Generate text from prompt."""
-        pass
-    @property
-    @abstractmethod
-    def provider_name(self) -> str:
-        """Return provider identifier."""
-        pass
+﻿from .base import BaseProvider
+from .mock_provider import MockProvider
+from .ollama_provider import OllamaProvider
+__all__ = ["BaseProvider", "MockProvider", "OllamaProvider"]
