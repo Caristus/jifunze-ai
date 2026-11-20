@@ -14,9 +14,11 @@ class TeachingArtifact(models.Model):
     artifact_type = models.CharField(max_length=30, choices=ArtifactType.choices)
     topic = models.CharField(max_length=255)
     grade_level = models.CharField(max_length=50, blank=True)
+    curriculum = models.CharField(max_length=50, default="CBC/CBE", help_text="CBC/CBE, Cambridge IGCSE, 8-4-4, etc.")
     content = models.TextField(help_text="The generated AI content (Markdown/HTML)")
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         ordering = ["-created_at"]
     def __str__(self):
         return f"{self.get_artifact_type_display()}: {self.topic}"
+

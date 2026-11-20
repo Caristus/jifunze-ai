@@ -20,11 +20,15 @@ urlpatterns = [
     path("studio/", studio_views.studio_page, name="studio"),
     path("governance/", governance_views.centre_page, name="governance"),
     path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
+    path("onboard/", institutions_views.bulk_onboard, name="bulk_onboard"),
     path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
+    path("onboard/", institutions_views.bulk_onboard, name="bulk_onboard"),
     path("upload/", resources_views.upload_resource, name="upload"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 
 
 

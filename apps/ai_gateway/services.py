@@ -37,10 +37,10 @@ Keep responses age-appropriate and aligned with local curricula (CBC/CBE, Cambri
             system_prompt=system_prompt,
             context_preview=context
         )
-    def generate_teacher_artifact(self, artifact_type: str, topic: str, grade_level: str, curriculum: str = None) -> str:
+    def generate_teacher_artifact(self, artifact_type: str, topic: str, grade_level: str, curriculum: str = "CBC/CBE") -> str:
         """Generate teaching materials."""
         curriculum_context = f" for {curriculum}" if curriculum else ""
-        system_prompt = f"""You are an expert curriculum designer{curriculum_context}.
+        system_prompt = f"""You are an expert curriculum designer for {curriculum}.\n\nSpecific {curriculum} Guidelines:\n- If CBC/CBE: Focus on competency-based outcomes, practical activities, and formative assessment.\n- If Cambridge: Focus on rigorous academic objectives, past-paper style questions, and structured marking schemes.\n- If 8-4-4: Focus on traditional knowledge retention and national exam formats.\n\nCreate high-quality {artifact_type}s that are:
 Create high-quality {artifact_type}s that are:
 - Age-appropriate for {grade_level}
 - Aligned with {curriculum or 'local educational standards'}
@@ -55,3 +55,5 @@ Include:
             prompt=prompt,
             system_prompt=system_prompt
         )
+
+

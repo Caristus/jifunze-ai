@@ -1,0 +1,34 @@
+﻿{% extends "base.html" %}
+{% block title %}Bulk Onboard Users — {{ institution.name }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-2">Bulk User Onboarding</h1>
+    <p class="text-slate-600 mb-6">Upload a CSV file to quickly register teachers and learners for <strong>{{ institution.name }}</strong>.</p>
+    <div class="bg-slate-50 border rounded p-4 mb-6 text-sm">
+      <p class="font-semibold mb-2">Required CSV Format (no header row needed, but recommended):</p>
+      <code class="block bg-slate-800 text-green-400 p-2 rounded">username,email,role</code>
+      <code class="block bg-slate-800 text-slate-300 p-2 rounded mt-1">jane.doe,jane@school.ac.ke,teacher</code>
+      <code class="block bg-slate-800 text-slate-300 p-2 rounded">john.student,,learner</code>
+      <p class="mt-2 text-slate-500">Roles must be exactly: <code>learner</code>, <code>teacher</code>, or <code>school_admin</code>. Email is optional.</p>
+    “>
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-medium mb-2">CSV File</label>
+        <input type="file" name="csv_file" accept=".csv" class="w-full border rounded px-3 py-2" required>
+      </div>
+      <button type="submit" class="w-full bg-teal-600 text-white rounded py-2 font-medium hover:bg-teal-700">
+        Upload and Process
+      </button>
+    </form>
+    {% if messages %}
+      <div class="mt-4 space-y-2">
+        {% for msg in messages %}
+          <div class="p-3 rounded text-sm {% if msg.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
