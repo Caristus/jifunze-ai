@@ -8,7 +8,7 @@ and transparent, source-grounded educational AI.
 - Teacher Studio - lesson plans, quizzes, worksheets and marking guides per curriculum.
 - Data Sovereignty Centre - consent, audit trail, export and deletion workflows.
 ## Quickstart
-    git clone https://github.com/carisokm2006/jifunze-ai.git
+    git clone https://github.com/Caristus/jifunze-ai.git
     cd jifunze-ai
     python -m venv venv
     venv\Scripts\Activate.ps1        # Windows
@@ -28,3 +28,4 @@ and transparent, source-grounded educational AI.
 | docs/roadmap.md | 12-month plan |
 ## Licence
 Apache License 2.0 (software). Documentation: CC-BY 4.0.
+
