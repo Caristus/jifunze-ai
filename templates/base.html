@@ -19,6 +19,7 @@
       <a href="/learn/" class="hover:text-teal-300">Learning Companion</a><a href="/upload/" class="hover:text-teal-300">Upload Resource</a>
       {% if user.role != 'learner' %}<a href="/studio/" class="hover:text-teal-300">Teacher Studio</a>{% endif %}
       {% if user.role == 'school_admin' or user.role == 'admin' %}<a href="/governance/" class="hover:text-teal-300">Data Sovereignty</a>
+      <a href="/ai-config/" class="hover:text-teal-300">AI Settings</a>
       <a href="/ai-config/" class="hover:text-teal-300">AI Settings</a>{% endif %}
       <a href="/admin/" class="hover:text-teal-300">Admin</a>
       <form method="post" action="/accounts/logout/" class="inline">{% csrf_token %}
@@ -35,5 +36,6 @@
 {% block scripts %}{% endblock %}
 </body>
 </html>
+
 
 

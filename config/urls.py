@@ -8,6 +8,7 @@ from apps.teacher_studio import views as studio_views
 from apps.governance import views as governance_views
 from apps.resources import views as resources_views
 from apps.ai_gateway import views as ai_gateway_views
+from apps.ai_gateway import views as ai_gateway_views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
@@ -19,9 +20,12 @@ urlpatterns = [
     path("studio/", studio_views.studio_page, name="studio"),
     path("governance/", governance_views.centre_page, name="governance"),
     path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
+    path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
     path("upload/", resources_views.upload_resource, name="upload"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 
 
