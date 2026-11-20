@@ -26,6 +26,10 @@ and transparent, source-grounded educational AI.
 | docs/data_governance.md | Consent, export, deletion, audit |
 | docs/privacy.md | Children's data and minimisation |
 | docs/roadmap.md | 12-month plan |
+| docs/demo_script.md | 3-minute demo walkthrough |
+| docs/school_pilot.md | Pilot one-pager for schools |
+| docs/fellowship_narrative.md | Public-interest narrative |
 ## Licence
 Apache License 2.0 (software). Documentation: CC-BY 4.0.
+
 
