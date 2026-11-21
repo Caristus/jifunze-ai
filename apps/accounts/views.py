@@ -18,3 +18,10 @@ def home(request):
         "audit": AuditEvent.objects.filter(institution=institution).count() if institution else 0,
     }
     return render(request, "dashboards/home.html", context)
+def set_theme(request, name):
+    from django.shortcuts import redirect
+    if name == "auto":
+        request.session.pop("theme_override", None)
+    elif name in ("royal", "forest", "lavender", "burgundy"):
+        request.session["theme_override"] = name
+    return redirect(request.META.get("HTTP_REFERER") or "/")

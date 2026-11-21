@@ -1,0 +1,45 @@
+﻿/* JIFUNZE AI Theme Skins - additive overrides only */
+body.theme-royal .bg-slate-900{background:#1b1f4b!important}
+body.theme-royal .bg-slate-800{background:#262b63!important}
+body.theme-royal .bg-slate-50{background:#f7f6f2!important}
+body.theme-royal .bg-slate-100{background:#eef0fb!important}
+body.theme-royal .bg-teal-600,body.theme-royal .bg-teal-500{background:#c9a227!important}
+body.theme-royal .hover\:bg-teal-500:hover,body.theme-royal .hover\:bg-teal-700:hover{background:#dbb63c!important}
+body.theme-royal .text-teal-600,body.theme-royal .text-teal-700{color:#9a7b1c!important}
+body.theme-royal .hover\:text-teal-400:hover,body.theme-royal .hover\:text-teal-300:hover{color:#e5c65a!important}
+body.theme-royal .bg-teal-100{background:#f5ecd2!important}
+body.theme-royal .border-teal-600{border-color:#c9a227!important}
+body.theme-royal .src-chip{background:#f5ecd2;border-color:#e0c76a;color:#8a6d15}
+body.theme-forest .bg-slate-900{background:#123f2a!important}
+body.theme-forest .bg-slate-800{background:#1b5238!important}
+body.theme-forest .bg-slate-50{background:#faf7ef!important}
+body.theme-forest .bg-slate-100{background:#e8f3ea!important}
+body.theme-forest .bg-teal-600,body.theme-forest .bg-teal-500{background:#1f9d55!important}
+body.theme-forest .hover\:bg-teal-500:hover,body.theme-forest .hover\:bg-teal-700:hover{background:#22b45f!important}
+body.theme-forest .text-teal-600,body.theme-forest .text-teal-700{color:#15803d!important}
+body.theme-forest .hover\:text-teal-400:hover,body.theme-forest .hover\:text-teal-300:hover{color:#7fd6a4!important}
+body.theme-forest .bg-teal-100{background:#dcf2e3!important}
+body.theme-forest .border-teal-600{border-color:#1f9d55!important}
+body.theme-forest .src-chip{background:#dcf2e3;border-color:#8fd6ab;color:#14652f}
+body.theme-lavender .bg-slate-900{background:#35406b!important}
+body.theme-lavender .bg-slate-800{background:#42507f!important}
+body.theme-lavender .bg-slate-50{background:#f6f6fb!important}
+body.theme-lavender .bg-slate-100{background:#eceaf6!important}
+body.theme-lavender .bg-teal-600,body.theme-lavender .bg-teal-500{background:#7c6fd0!important}
+body.theme-lavender .hover\:bg-teal-500:hover,body.theme-lavender .hover\:bg-teal-700:hover{background:#8d81da!important}
+body.theme-lavender .text-teal-600,body.theme-lavender .text-teal-700{color:#5b4fc0!important}
+body.theme-lavender .hover\:text-teal-400:hover,body.theme-lavender .hover\:text-teal-300:hover{color:#b7aef0!important}
+body.theme-lavender .bg-teal-100{background:#e6e1f7!important}
+body.theme-lavender .border-teal-600{border-color:#7c6fd0!important}
+body.theme-lavender .src-chip{background:#e6e1f7;border-color:#b3a9e8;color:#4c40a8}
+body.theme-burgundy .bg-slate-900{background:#4a1220!important}
+body.theme-burgundy .bg-slate-800{background:#5c1a2b!important}
+body.theme-burgundy .bg-slate-50{background:#fbf6f4!important}
+body.theme-burgundy .bg-slate-100{background:#f6e7e2!important}
+body.theme-burgundy .bg-teal-600,body.theme-burgundy .bg-teal-500{background:#d97b66!important}
+body.theme-burgundy .hover\:bg-teal-500:hover,body.theme-burgundy .hover\:bg-teal-700:hover{background:#e28c77!important}
+body.theme-burgundy .text-teal-600,body.theme-burgundy .text-teal-700{color:#b0503c!important}
+body.theme-burgundy .hover\:text-teal-400:hover,body.theme-burgundy .hover\:text-teal-300:hover{color:#f0b3a4!important}
+body.theme-burgundy .bg-teal-100{background:#f9e3dd!important}
+body.theme-burgundy .border-teal-600{border-color:#d97b66!important}
+body.theme-burgundy .src-chip{background:#f9e3dd;border-color:#e8b0a2;color:#96402e}

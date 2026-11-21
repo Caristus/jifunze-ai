@@ -13,6 +13,7 @@ from apps.ai_gateway import views as ai_gateway_views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
+    path("theme/set/<str:name>/", accounts_views.set_theme, name="set_theme"),
     path("api/learning/", include("apps.learning.urls")),
     path("api/teacher/", include("apps.teacher_studio.urls")),
     path("api/governance/", include("apps.governance.urls")),
@@ -30,6 +31,7 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 
