@@ -141,3 +141,38 @@ def system_health(request):
         "last_backup": backups[0].name if backups else None,
     }
     return render(request, "governance/health.html", context)
+@login_required(login_url="/accounts/login/")
+def system_health(request):
+    from django.db import connection
+    from pathlib import Path
+    import json
+    from apps.resources.models import LearningResource, DocumentChunk
+    from apps.learning.models import Conversation, Message
+    from apps.teacher_studio.models import TeachingArtifact
+    from apps.governance.models import ConsentRecord, DataRequest
+    from apps.audit.models import AuditEvent
+    membership = _membership(request.user)
+    institution = membership.institution if membership else None
+    backups = sorted((Path(settings.BASE_DIR) / "backups").glob("*"), reverse=True) if (Path(settings.BASE_DIR) / "backups").exists() else []
+    context = {
+        "institution": institution,
+        "counts": {
+            "resources": LearningResource.objects.filter(institution=institution).count() if institution else LearningResource.objects.count(),
+            "chunks": DocumentChunk.objects.filter(resource__institution=institution).count() if institution else DocumentChunk.objects.count(),
+            "conversations": Conversation.objects.filter(institution=institution).count() if institution else Conversation.objects.count(),
+            "messages": Message.objects.filter(conversation__institution=institution).count() if institution else Message.objects.count(),
+            "artifacts": TeachingArtifact.objects.filter(institution=institution).count() if institution else TeachingArtifact.objects.count(),
+            "consents": ConsentRecord.objects.filter(institution=institution).count() if institution else ConsentRecord.objects.count(),
+            "requests": DataRequest.objects.filter(institution=institution).count() if institution else DataRequest.objects.count(),
+            "audit": AuditEvent.objects.filter(institution=institution).count() if institution else AuditEvent.objects.count(),
+        },
+        "db_engine": connection.vendor,
+        "ai_provider": getattr(institution, "ai_provider", "mock") if institution else "mock",
+        "ai_model": getattr(institution, "ai_model", "") if institution else "",
+        "pwa": {
+            "manifest": (Path(settings.STATICFILES_DIRS[0]) / "manifest.json").exists(),
+            "service_worker": (Path(settings.STATICFILES_DIRS[0]) / "sw.js").exists(),
+        },
+        "last_backup": backups[0].name if backups else None,
+    }
+    return render(request, "governance/health.html", context)
