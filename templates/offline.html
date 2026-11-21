@@ -1,0 +1,15 @@
+﻿{% extends "base.html" %}
+{% block title %}Offline — JIFUNZE AI{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-20 text-center">
+  <div class="text-6xl mb-4">📡</div>
+  <h1 class="text-2xl font-bold text-slate-900 mb-2">You are currently offline</h1>
+  <p class="text-slate-600 mb-6">
+    JIFUNZE AI is designed for low-connectivity environments. 
+    While you cannot generate new AI responses right now, any previously cached resources and conversations remain accessible.
+  </p>
+  <button onclick="window.location.reload()" class="bg-teal-600 hover:bg-teal-500 text-white rounded px-6 py-2 font-medium">
+    Try Reconnecting
+  </button>
+</div>
+{% endblock %}

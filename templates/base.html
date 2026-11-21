@@ -27,6 +27,12 @@
       <a href="/ai-config/" class="hover:text-teal-300">AI Settings</a>
       {% if user.role == "school_admin" or user.role == "admin" %}<a href="/onboard/" class="hover:text-teal-300">Bulk Onboard</a>{% endif %}{% endif %}
       <a href="/admin/" class="hover:text-teal-300">Admin</a>
+      <form method="get" action="/" class="inline">
+        <select name="lang" onchange="this.form.submit()" class="bg-slate-800 text-white text-xs border border-slate-600 rounded px-2 py-1">
+          <option value="en" {% if request.GET.lang == "sw" %}{% else %}selected{% endif %}>English</option>
+          <option value="sw" {% if request.GET.lang == "sw" %}selected{% endif %}>Kiswahili</option>
+        </select>
+      </form>
       <form method="post" action="/accounts/logout/" class="inline">{% csrf_token %}
         <button class="bg-teal-600 hover:bg-teal-500 px-3 py-1 rounded text-white">Sign out</button>
       </form>
@@ -46,6 +52,7 @@
 </script>
 </body>
 </html>
+
 
 
 

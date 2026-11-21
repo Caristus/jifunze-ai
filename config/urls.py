@@ -26,9 +26,11 @@ urlpatterns = [
     path("onboard/", institutions_views.bulk_onboard, name="bulk_onboard"),
     path("upload/", resources_views.upload_resource, name="upload"),
     path("library/", resources_views.resource_library, name="library"),
+    path("offline/", lambda request: __import__("django.shortcuts").shortcuts.render(request, "offline.html"), name="offline"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 
