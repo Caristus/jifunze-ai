@@ -1,0 +1,58 @@
+﻿/* JIFUNZE AI DESIGN SYSTEM - ROYAL INDIGO & AMBIENT IVORY */
+:root {
+    /* Brand Colors */
+    --royal-indigo: #1B1F4B;
+    --royal-indigo-hover: #262b63;
+    --champagne-gold: #C9A227;
+    --learning-green: #10B981;
+    /* Surfaces */
+    --bg-canvas: #FDFCF8; /* Warm Ivory */
+    --surface-card: #FFFFFF;
+    --surface-subtle: #F8FAFC;
+    /* Typography */
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --font-ui: 'Inter', sans-serif;
+    --font-display: 'Manrope', sans-serif;
+    /* Borders & Shadows */
+    --border-soft: #E2E8F0;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+body { font-family: var(--font-ui); background-color: var(--bg-canvas); color: var(--text-primary); }
+.font-display { font-family: var(--font-display); }
+/* Premium Card Style */
+.jf-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-soft);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+.jf-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+/* Timeline Styles */
+.timeline-container { position: relative; padding-left: 2rem; }
+.timeline-line { position: absolute; left: 15px; top: 24px; bottom: 0; width: 2px; background: var(--border-soft); }
+.timeline-item { position: relative; margin-bottom: 2rem; }
+.timeline-dot { 
+    position: absolute; left: -2rem; top: 0; width: 32px; height: 32px; 
+    border-radius: 50%; background: var(--surface-card); border: 2px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: center; 
+    font-weight: 700; font-size: 0.75rem; color: var(--royal-indigo); z-index: 2;
+}
+.timeline-item.active .timeline-dot { background: var(--royal-indigo); color: white; border-color: var(--royal-indigo); }
+/* Outcome Badge */
+.outcome-badge {
+    width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--learning-green); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.875rem; flex-shrink: 0;
+}
+/* Print Styles */
+@media print {
+    body { background: white !important; }
+    header, footer, .no-print { display: none !important; }
+    .jf-card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+    .timeline-line { background: #ddd !important; }
+}

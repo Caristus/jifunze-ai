@@ -17,14 +17,19 @@ class TeachingArtifact(models.Model):
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     institution = models.ForeignKey("institutions.Institution", on_delete=models.CASCADE, related_name="artifacts")
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="artifacts")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="artifacts")
     artifact_type = models.CharField(max_length=30, choices=ArtifactType.choices, default=ArtifactType.LESSON_PLAN)
     topic = models.CharField(max_length=255)
+    subject = models.CharField(max_length=100, blank=True, null=True)
+    subtopic = models.CharField(max_length=255, blank=True, null=True, help_text="Specific subtopic or lesson title")
     grade_level = models.CharField(max_length=50, blank=True)
     curriculum = models.CharField(max_length=100, choices=CURRICULUM_CHOICES, default="CBC/CBE")
+    week = models.CharField(max_length=50, blank=True, null=True, help_text="e.g. Week 3")
+    term = models.CharField(max_length=50, blank=True, null=True, help_text="e.g. Term 1")
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         ordering = ["-created_at"]
     def __str__(self):
         return f"{self.get_artifact_type_display()} - {self.topic}"
+

@@ -1,4 +1,5 @@
 ﻿import json
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -176,3 +177,4 @@ def system_health(request):
         "last_backup": backups[0].name if backups else None,
     }
     return render(request, "governance/health.html", context)
+

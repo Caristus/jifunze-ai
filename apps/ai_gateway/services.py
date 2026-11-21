@@ -39,10 +39,10 @@ class AIGateway:
         system = (f"You are an expert {curriculum} curriculum designer. {self._guidance(curriculum)} "
                   f"Create a classroom-ready {artifact_type} for {grade_level} on: {topic}. "
                   f"Include objectives, activities, and assessment.")
-        return self.provider.generate(
-            f"Generate a {artifact_type} on {topic} for {grade_level}.",
-            system_prompt=system, artifact_type=artifact_type, topic=topic,
-            grade_level=grade_level, curriculum=curriculum, mode="teacher")
+        prompt_text = f"Generate a {artifact_type} on {topic} for {grade_level}."
+        if artifact_type == "lesson_plan":
+            prompt_text += " CRITICAL: You MUST return ONLY a valid JSON object with keys: title, subject, curriculum, duration, outcomes (array), flow (array of objects with step, duration, content), resources, differentiation, assessment, teacher_notes. Do not wrap in markdown code blocks."
+
 
 
 
