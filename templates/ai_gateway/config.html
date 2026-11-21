@@ -1,0 +1,68 @@
+﻿{% extends "base.html" %}
+{% block title %}AI Provider Configuration — {{ institution.name }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-slate-900">AI Provider Configuration</h1>
+    <p class="text-slate-500 mt-2">Choose how JIFUNZE AI generates responses for <span class="font-semibold text-teal-700">{{ institution.name }}</span>.</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">AI Backend Provider</label>
+        <select name="ai_provider" id="ai_provider" class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow bg-white">
+          {% for value, label in provider_choices %}
+            <option value="{{ value }}" {% if institution.ai_provider == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="text-xs text-slate-500 mt-2">
+          <strong>Development Mock:</strong> Safe, fast, simulated responses for testing.<br>
+          <strong>Ollama (Local):</strong> Real AI inference running entirely on your school's local server (offline capable).
+        </p>
+      </div>
+      <div id="ollama-config" class="hidden space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Ollama Model Name</label>
+          <input type="text" name="ai_model" value="{{ institution.ai_model|default:'llama3.2' }}" 
+                 class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500" 
+                 placeholder="e.g., llama3.2, mistral, phi3">
+          <p class="text-xs text-slate-500 mt-2">
+            The model must be pre-downloaded on your server. Smaller models (like <code>llama3.2</code> or <code>phi3</code>) perform best on standard school hardware.
+          </p>
+        </div>
+      </div>
+      <div class="bg-teal-50 border border-teal-200 rounded-lg p-5">
+        <h3 class="font-semibold text-teal-900 mb-2 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          Why Local Inference?
+        </h3>
+        <ul class="text-sm text-teal-800 space-y-1.5 list-disc list-inside">
+          <li><strong>Zero Data Leakage:</strong> Student queries and school documents never leave your network.</li>
+          <li><strong>True Offline Capability:</strong> Works perfectly even when the school's internet connection drops.</li>
+          <li><strong>No API Costs:</strong> Eliminate recurring monthly vendor fees.</li>
+        </ul>
+      </div>
+      <div class="pt-4 border-t border-slate-200 flex justify-end">
+        <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg px-6 py-3 shadow-md transition-all flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          Save Configuration
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  const providerSelect = document.getElementById('ai_provider');
+  const ollamaConfig = document.getElementById('ollama-config');
+  function toggleOllama() {
+    if (providerSelect.value === 'ollama') {
+      ollamaConfig.classList.remove('hidden');
+    } else {
+      ollamaConfig.classList.add('hidden');
+    }
+  }
+  providerSelect.addEventListener('change', toggleOllama);
+  toggleOllama(); // Run on load
+</script>
+{% endblock %}

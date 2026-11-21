@@ -13,3 +13,4 @@ staticfiles/
 htmlcov/
 .vscode/
 .idea/
+backups/

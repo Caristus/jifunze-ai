@@ -21,6 +21,7 @@ urlpatterns = [
     path("learn/", learning_views.companion_page, name="companion"),
     path("studio/", studio_views.studio_page, name="studio"),
     path("governance/", governance_views.centre_page, name="governance"),
+    path("health/", governance_views.system_health, name="health"),
     path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
     path("onboard/", institutions_views.bulk_onboard, name="bulk_onboard"),
     path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
@@ -31,6 +32,7 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 

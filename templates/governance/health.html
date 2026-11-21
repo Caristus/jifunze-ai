@@ -1,0 +1,36 @@
+﻿{% extends "base.html" %}
+{% block title %}System Health — JIFUNZE AI{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold text-slate-900 mb-1">System Health</h1>
+<p class="text-slate-500 mb-8">Live status of the learning platform — {% if institution %}{{ institution.name }}{% endif %}</p>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  {% for label, value in counts.items %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 text-center">
+      <p class="text-3xl font-bold text-slate-900">{{ value }}</p>
+      <p class="text-xs uppercase tracking-wide text-slate-500 mt-1">{{ label }}</p>
+    </div>
+  {% endfor %}
+</div>
+<div class="grid md:grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-800 mb-3">Infrastructure</h2>
+    <p class="text-sm"><span class="text-slate-500">Database:</span> <span class="font-mono">{{ db_engine }}</span></p>
+    <p class="text-sm"><span class="text-slate-500">AI provider:</span> <span class="font-mono">{{ ai_provider }}</span> {{ ai_model }}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-800 mb-3">Offline PWA</h2>
+    <p class="text-sm">{% if pwa.manifest %}✅{% else %}❌{% endif %} Manifest</p>
+    <p class="text-sm">{% if pwa.service_worker %}✅{% else %}❌{% endif %} Service Worker</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-800 mb-3">Backups</h2>
+    <p class="text-sm text-slate-600">{% if last_backup %}Latest: {{ last_backup }}{% else %}No backups yet — run <code class="bg-slate-100 px-1 rounded">backup_jifunze</code>{% endif %}</p>
+  </div>
+</div>
+<div class="bg-slate-900 text-slate-300 rounded-xl p-5 text-sm font-mono">
+  <p class="text-teal-400 mb-2"># Governance commands (run in terminal)</p>
+  <p>.\venv\Scripts\python.exe manage.py retention_policy --days 365 --dry-run</p>
+  <p>.\venv\Scripts\python.exe manage.py retention_policy --days 365</p>
+  <p>.\venv\Scripts\python.exe manage.py backup_jifunze</p>
+</div>
+{% endblock %}
