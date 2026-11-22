@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from django.conf import settings
 from django.db import models
 class LearningResource(models.Model):
@@ -15,6 +15,10 @@ class LearningResource(models.Model):
     grade_level = models.CharField(max_length=50, blank=True)
     topic = models.CharField(max_length=255, blank=True, help_text="Folder hierarchy, e.g. Biology > Form 2")
     curriculum = models.CharField(max_length=100, blank=True, default="CBC/CBE")
+    provenance_tier = models.CharField(max_length=1, choices=[("A","Ingest (open/licensed)"),("B","Link-out (cite only)"),("C","Reference-only (private)")], default="A")
+    license = models.CharField(max_length=120, blank=True, default="")
+    source_url = models.URLField(blank=True, default="")
+    attribution = models.CharField(max_length=255, blank=True, default="")
     file = models.FileField(upload_to="resources/%Y/%m/")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.UPLOADED)
     created_at = models.DateTimeField(auto_now_add=True)

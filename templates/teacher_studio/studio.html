@@ -2,104 +2,590 @@
 {% block title %}Teacher Studio — JIFUNZE AI{% endblock %}
 {% block content %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="/static/js/vendor/jspdf.umd.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'"></script>
+<script src="/static/js/vendor/jspdf.plugin.autotable.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'"></script>
 <style>
-  :root{--indigo:#1B1F4B;--indigo2:#262b63;--green:#10B981;--bg:#FDFCF8;--card:#fff;--ink:#0F172A;--mut:#64748B;--line:#E2E8F0;}
-  .jf{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink);}
+  :root{--indigo:#1B1F4B;--indigo2:#2A3070;--champ:#C9A227;--green:#10B981;--green2:#0E9F6E;--bg:#FDFCF8;--card:#FFFFFF;--ink:#0F172A;--mut:#64748B;--line:#E4E1D6;--soft:#F6F4EC;--amber:#F59E0B;--red:#DC2626;}
+  *{scrollbar-width:thin;scrollbar-color:#C9C4B4 #EFEDE6;}
+  *::-webkit-scrollbar{width:10px;height:10px;}
+  *::-webkit-scrollbar-track{background:#EFEDE6;}
+  *::-webkit-scrollbar-thumb{background:#C9C4B4;border-radius:8px;border:2px solid #EFEDE6;}
+  *::-webkit-scrollbar-thumb:hover{background:var(--indigo);}
+  .jf{font-family:Inter,sans-serif;color:var(--ink);background:radial-gradient(1100px 500px at 85% -10%,rgba(27,31,75,.06),transparent 60%),radial-gradient(900px 480px at -10% 110%,rgba(16,185,129,.07),transparent 60%),var(--bg);min-height:100vh;}
   .jf h1,.jf h2,.jf h3{font-family:Manrope,sans-serif;}
-  .jf-card{background:var(--card);border:1px solid var(--line);border-radius:1rem;box-shadow:0 4px 6px -1px rgba(0,0,0,.08);}
-  .jf-btn{background:var(--indigo);color:#fff;font-weight:600;border-radius:.6rem;padding:.8rem;width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;border:none;transition:.2s;}
-  .jf-btn:hover{background:var(--indigo2);}
-  .jf-btn:disabled{opacity:.6;cursor:wait;}
-  .tl{position:relative;padding-left:2.5rem;}
-  .tl::before{content:"";position:absolute;left:15px;top:8px;bottom:8px;width:2px;background:var(--line);}
-  .tl-item{position:relative;margin-bottom:1.25rem;}
-  .tl-dot{position:absolute;left:-2.5rem;top:0;width:32px;height:32px;border-radius:50%;background:var(--card);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:var(--indigo);}
+  .jf-card{background:var(--card);border:1px solid var(--line);border-radius:1rem;box-shadow:0 6px 18px -8px rgba(27,31,75,.14);}
+  .jf label{display:block;font-size:.8rem;font-weight:600;margin-bottom:.35rem;}
+  .jf input,.jf select,.jf textarea{width:100%;border:1px solid var(--line);border-radius:.6rem;padding:.6rem .7rem;background:#fff;font-size:.9rem;font-family:inherit;transition:.15s;}
+  .jf input:focus,.jf select:focus,.jf textarea:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(27,31,75,.14);}
+  .jf-btn{background:var(--indigo);color:#fff;font-weight:600;border-radius:.7rem;padding:.8rem;width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;border:none;transition:.18s;box-shadow:0 8px 20px -10px rgba(27,31,75,.55);font-size:.88rem;}
+  .jf-btn:hover{background:var(--indigo2);transform:translateY(-1px);}
+  .jf-btn:disabled{opacity:.65;cursor:wait;transform:none;}
+  .jf-btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none;}
+  .jf-btn.ghost:hover{background:var(--soft);}
+  .jf-btn.green{background:var(--green2);}
+  .jf-btn.green:hover{background:#0b8457;}
+  .chip{font-size:.68rem;font-weight:700;letter-spacing:.04em;padding:.22rem .6rem;border-radius:9999px;background:#EEF0F6;color:#3B4270;}
+  .tl{position:relative;padding-left:2.6rem;}
+  .tl::before{content:"";position:absolute;left:15px;top:10px;bottom:10px;width:2px;background:linear-gradient(var(--indigo),var(--green));opacity:.35;}
+  .tl-item{position:relative;margin-bottom:1.1rem;}
+  .tl-dot{position:absolute;left:-2.6rem;top:2px;width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.72rem;color:var(--indigo);}
   .tl-item.active .tl-dot{background:var(--indigo);color:#fff;border-color:var(--indigo);}
-  .oc{display:flex;align-items:flex-start;gap:1rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);padding:1rem;border-radius:.6rem;}
-  .oc b{width:2rem;height:2rem;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .chip{font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:9999px;background:#f1f5f9;color:#475569;}
-  @media print{.no-print{display:none!important;}.jf-card{box-shadow:none;border:none;}.tl::before{background:#cbd5e1;}}
+  .oc{display:flex;gap:.9rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.22);padding:.9rem 1rem;border-radius:.7rem;}
+  .oc b{width:1.9rem;height:1.9rem;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem;}
+  .stat{background:var(--soft);border:1px solid var(--line);border-radius:.7rem;padding:.7rem .8rem;}
+  .stat p:first-child{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;}
+  .stat p:last-child{font-family:Manrope;font-weight:800;font-size:.95rem;margin-top:.15rem;}
+  .qcard{border:1px solid var(--line);border-radius:.8rem;padding:1rem 1.1rem;margin-bottom:.9rem;background:#fff;}
+  .optrow{display:flex;gap:.6rem;align-items:flex-start;padding:.45rem .6rem;border:1px solid var(--line);border-radius:.5rem;margin-top:.4rem;font-size:.9rem;cursor:pointer;}
+  .optrow:hover{background:var(--soft);}
+  .optrow input{width:auto;margin-top:.2rem;}
+  .answer{display:none;margin-top:.7rem;background:rgba(16,185,129,.08);border:1px dashed var(--green2);border-radius:.6rem;padding:.7rem .8rem;font-size:.85rem;}
+  .show-answers .answer{display:block;}
+  .fb{display:none;margin-top:.6rem;border-radius:.55rem;padding:.55rem .75rem;font-size:.82rem;font-weight:600;}
+  .fb.correct{display:block;background:#DCFCE7;color:#166534;}
+  .fb.partial{display:block;background:#FEF3C7;color:#92400E;}
+  .fb.wrong{display:block;background:#FEE2E2;color:#991B1B;}
+  .fb.review{display:block;background:#E0E7FF;color:#3730A3;}
+  .fb.blank{display:block;background:#F1F5F9;color:#475569;}
+  .lines{margin-top:.6rem;height:calc(var(--n)*1.6rem);background:repeating-linear-gradient(transparent,transparent calc(1.6rem - 1px),var(--line) calc(1.6rem - 1px),var(--line) 1.6rem);}
+  .wb{display:inline-block;background:#EEF0F6;border:1px solid var(--line);border-radius:9999px;padding:.25rem .7rem;font-size:.78rem;font-weight:600;margin:.15rem;}
+  .rubric{width:100%;border-collapse:collapse;font-size:.8rem;}
+  .rubric th,.rubric td{border:1px solid var(--line);padding:.55rem .6rem;text-align:left;vertical-align:top;}
+  .rubric th{background:var(--indigo);color:#fff;font-family:Manrope;}
+  .rubric td:first-child{font-weight:700;background:var(--soft);}
+  .safety{background:#FEF2F2;border-left:4px solid var(--red);padding:.9rem 1rem;border-radius:0 .6rem .6rem 0;}
+  .check{display:flex;gap:.6rem;padding:.45rem .6rem;border:1px solid var(--line);border-radius:.5rem;margin-top:.4rem;font-size:.88rem;}
+  .diagram{border:1px dashed var(--line);border-radius:.7rem;background:var(--soft);padding:1rem;margin-top:.6rem;}
+  .score{background:linear-gradient(135deg,var(--indigo),#343C86);color:#fff;border-radius:1rem;padding:1.2rem 1.4rem;margin-bottom:1.4rem;}
+  .score .big{font-family:Manrope;font-size:2.2rem;font-weight:800;line-height:1;}
+  .fade{animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  @media print{.no-print{display:none!important;}.jf{background:#fff;}.jf-card{box-shadow:none;border:none;}.score{background:#334155!important;-webkit-print-color-adjust:exact;}.rubric th{background:#334155!important;-webkit-print-color-adjust:exact;}}
 </style>
-<div class="jf max-w-7xl mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-1" style="color:var(--indigo)">Teacher Studio</h1>
-  <p class="mb-6" style="color:var(--mut)">Generate world-class, curriculum-aligned teaching materials.</p>
-  <div id="err" class="no-print hidden" style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:.6rem;padding:1rem;margin-bottom:1.5rem;white-space:pre-wrap;font-size:.8rem"></div>
+<div class="jf px-4 py-8">
+ <div class="max-w-7xl mx-auto">
+  <div class="flex items-end justify-between mb-6 no-print">
+    <div><h1 class="text-3xl font-extrabold" style="color:var(--indigo)">Teacher Studio</h1>
+    <p class="mt-1" style="color:var(--mut)">Generate, auto-mark and export curriculum-aligned materials.</p></div>
+    <span class="chip" style="background:var(--indigo);color:#fff">AI POWERED</span>
+  </div>
+  <div id="err" class="no-print hidden" style="background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:.7rem;padding:1rem;margin-bottom:1.4rem;white-space:pre-wrap;font-size:.8rem"></div>
   <div class="grid lg:grid-cols-12 gap-8">
     <div class="lg:col-span-4 no-print">
-      <div class="jf-card p-6">
+      <div class="jf-card p-6" style="position:sticky;top:24px;max-height:calc(100vh - 60px);overflow:auto">
         <form id="genform" class="space-y-4">
           {% csrf_token %}
-          <div><label class="block text-sm font-semibold mb-1">Artifact type</label>
-            <select id="atype" class="w-full border rounded-lg px-3 py-2 bg-white"><option value="lesson_plan">Lesson Plan</option><option value="quiz">Quiz</option></select></div>
-          <div><label class="block text-sm font-semibold mb-1">Topic</label><input id="topic" value="Photosynthesis" class="w-full border rounded-lg px-3 py-2"></div>
-          <div><label class="block text-sm font-semibold mb-1">Subtopic</label><input id="subtopic" placeholder="e.g. Light reactions" class="w-full border rounded-lg px-3 py-2"></div>
+          <div><label>Artifact type</label>
+            <select id="atype"><option value="lesson_plan">Lesson Plan</option><option value="quiz">Quiz / Assessment</option><option value="worksheet">Worksheet</option><option value="marking_guide">Marking Guide</option><option value="activity">Learning Activity</option><option value="scheme_of_work">Scheme of Work</option><option value="revision_notes">Revision Notes</option></select></div>
+          <div><label>Topic</label><input id="topic" value="Photosynthesis"></div>
+          <div><label>Subtopic / title</label><input id="subtopic" placeholder="e.g. Light-dependent reactions"></div>
+          <div><label>Curriculum</label>
+            <select id="curr"><option>CBC/CBE</option><option>8-4-4</option><option selected>Cambridge IGCSE</option><option>IB</option><option>CAPS</option><option>NECTA</option><option>NCDC</option><option>NERDC</option><option>NaCCA</option><option>ZIMSEC</option><option>WAEC</option><option>Edexcel</option><option>Common Core</option></select></div>
+          <div><label>Grade / level</label><select id="grade"></select></div>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="block text-sm font-semibold mb-1">Grade</label><input id="grade" value="Form 2" class="w-full border rounded-lg px-3 py-2"></div>
-            <div><label class="block text-sm font-semibold mb-1">Curriculum</label><select id="curr" class="w-full border rounded-lg px-3 py-2 bg-white"><option>CBC/CBE</option><option selected>Cambridge IGCSE</option><option>IB</option><option>CAPS</option><option>NECTA</option><option>NCDC</option><option>NERDC</option><option>NaCCA</option><option>ZIMSEC</option><option>WAEC</option><option>Edexcel</option><option>Common Core</option></select></div>
+            <div><label>Week</label><select id="week"><option value="">—</option></select></div>
+            <div><label>Term</label><select id="term"><option value="">—</option><option>Term 1</option><option>Term 2</option><option>Term 3</option></select></div>
           </div>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="block text-sm font-semibold mb-1">Week</label><input id="week" placeholder="Week 3" class="w-full border rounded-lg px-3 py-2"></div>
-            <div><label class="block text-sm font-semibold mb-1">Term</label><input id="term" placeholder="Term 1" class="w-full border rounded-lg px-3 py-2"></div>
+            <div><label>Duration (min)</label><select id="duration"><option>30</option><option>40</option><option selected>50</option><option>60</option><option>80</option></select></div>
+            <div><label>Language</label><select id="language"><option value="en">English</option><option value="sw">Kiswahili</option></select></div>
           </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label>Questions / tasks</label><select id="count"><option>4</option><option selected>6</option><option>8</option><option>10</option><option>12</option><option>15</option><option>20</option></select></div>
+            <div><label>Difficulty</label><select id="difficulty"><option>Foundation</option><option selected>Standard</option><option>Challenge</option></select></div>
+          </div>
+          <div><label>Question mix</label>
+            <select id="mix"><option value="balanced">Balanced (all types)</option><option value="mcq">Objective-heavy (MCQ / T-F)</option><option value="short">Short answer &amp; blanks</option><option value="structured">Structured exam-style</option><option value="practical">Illustrative / practical</option></select></div>
           <button type="submit" id="btn" class="jf-btn"><i data-lucide="sparkles"></i> Generate Material</button>
         </form>
       </div>
     </div>
     <div class="lg:col-span-8">
-      <div id="empty" class="jf-card p-16 text-center" style="border:2px dashed var(--line)">Your generated lesson plan will appear here.</div>
-      <div id="out" class="hidden">
-        <div class="flex gap-3 mb-4 no-print">
-          <button id="printBtn" class="jf-btn flex-1"><i data-lucide="printer"></i> Print</button>
-          <button id="copyBtn" class="jf-btn flex-1" style="background:#fff;color:var(--ink);border:1px solid var(--line)"><i data-lucide="copy"></i> Copy</button>
+      <div id="empty" class="jf-card p-16 text-center" style="border:2px dashed var(--line);color:var(--mut)">Your generated material will appear here.</div>
+      <div id="out" class="hidden fade">
+        <div class="flex flex-wrap gap-3 mb-4 no-print">
+          <button id="markBtn" class="jf-btn green flex-1 hidden"><i data-lucide="check-check"></i> Auto-mark</button>
+          <button id="ansBtn" class="jf-btn ghost flex-1"><i data-lucide="eye"></i> Marking scheme</button>
+          <button id="printBtn" class="jf-btn ghost flex-1"><i data-lucide="printer"></i> Print</button>
+          <button id="dlBtn" class="jf-btn ghost flex-1"><i data-lucide="file-down"></i> Download PDF</button>
         </div>
         <div id="doc" class="jf-card p-8 md:p-12"></div>
       </div>
     </div>
   </div>
+ </div>
 </div>
 <script>
 lucide.createIcons();
-const f=document.getElementById('genform'),btn=document.getElementById('btn'),err=document.getElementById('err');
-f.addEventListener('submit',async e=>{
-  e.preventDefault();err.classList.add('hidden');btn.disabled=true;btn.innerHTML='Generating...';
-  const token=document.querySelector('[name=csrfmiddlewaretoken]').value;
-  const body={artifact_type:atype.value,topic:topic.value,subtopic:subtopic.value,grade_level:grade.value,curriculum:curr.value,week:week.value,term:term.value};
-  try{
-    const r=await fetch('/api/teacher/artifacts/generate/',{method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':token,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const raw=await r.text();
-    if(!r.ok){throw new Error('HTTP '+r.status+': '+raw.slice(0,300));}
-    const d=JSON.parse(raw);
-    let lesson; try{lesson=JSON.parse(d.content);}catch(_){lesson=null;}
-    document.getElementById('empty').classList.add('hidden');
-    document.getElementById('out').classList.remove('hidden');
-    document.getElementById('doc').innerHTML=lesson?renderDoc(lesson,body):('<pre style="white-space:pre-wrap">'+d.content+'</pre>');
-    lucide.createIcons();
-  }catch(ex){err.textContent=ex.message;err.classList.remove('hidden');}
-  finally{btn.disabled=false;btn.innerHTML='<i data-lucide="sparkles"></i> Generate Material';lucide.createIcons();}
-});
-function renderDoc(d,b){
-  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-  const flow=(d.flow||[]).map((x,i)=>`<div class="tl-item ${i===0?'active':''}"><div class="tl-dot">${String(i+1).padStart(2,'0')}</div><div class="jf-card p-4"><div class="flex justify-between items-center mb-1"><h3 class="font-bold" style="color:var(--indigo)">${esc(x.step)}</h3><span class="chip">${esc(x.duration)}</span></div><p style="color:var(--mut);font-size:.9rem">${esc(x.content)}</p></div></div>`).join('');
-  const oc=(d.outcomes||[]).map((o,i)=>`<div class="oc"><b>${i+1}</b><span>${esc(o)}</span></div>`).join('');
-  return `<div style="border-bottom:2px solid var(--indigo);padding-bottom:1.5rem;margin-bottom:2rem">
-    <div class="flex gap-2 mb-2"><span class="chip" style="background:var(--indigo);color:#fff">AI Generated</span><span class="chip" style="background:#dcfce7;color:#166534">${esc(d.curriculum)}</span></div>
-    <h2 class="text-3xl font-bold" style="color:var(--indigo)">${esc(d.title)}</h2>
-    <p style="color:var(--mut)">Lesson Plan · ${esc(d.duration||'50 min')} · ${esc(b.subtopic||d.subtopic||'')}</p>
-    <div class="grid grid-cols-4 gap-3 mt-4">
-      <div class="jf-card p-3"><p class="text-xs uppercase" style="color:var(--mut)">Duration</p><p class="font-bold">${esc(d.duration||'50 min')}</p></div>
-      <div class="jf-card p-3"><p class="text-xs uppercase" style="color:var(--mut)">Subject</p><p class="font-bold">${esc(d.subject||'—')}</p></div>
-      <div class="jf-card p-3"><p class="text-xs uppercase" style="color:var(--mut)">Grade</p><p class="font-bold">${esc(b.grade_level)}</p></div>
-      <div class="jf-card p-3"><p class="text-xs uppercase" style="color:var(--mut)">Week/Term</p><p class="font-bold">${esc(b.week||'—')} / ${esc(b.term||'—')}</p></div>
-    </div></div>
-    <h3 class="text-xl font-bold mb-3" style="color:var(--indigo)">Learning Outcomes</h3><div class="space-y-2 mb-8">${oc}</div>
-    <h3 class="text-xl font-bold mb-4" style="color:var(--indigo)">Lesson Flow</h3><div class="tl mb-8">${flow}</div>
-    <div class="grid md:grid-cols-2 gap-6 mb-8"><div><h3 class="font-bold mb-2" style="color:var(--indigo)">Resources</h3><p style="color:var(--mut);font-size:.9rem">${esc(d.resources)}</p></div><div><h3 class="font-bold mb-2" style="color:var(--indigo)">Differentiation</h3><p style="color:var(--mut);font-size:.9rem">${esc(d.differentiation)}</p></div></div>
-    <h3 class="font-bold mb-2" style="color:var(--indigo)">Assessment</h3><p style="color:var(--mut);font-size:.9rem" class="mb-6">${esc(d.assessment)}</p>
-    <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:1rem;border-radius:0 .5rem .5rem 0"><h3 class="font-bold text-sm mb-1" style="color:#92400e">Teacher Notes</h3><p style="color:#92400e;font-size:.9rem">${esc(d.teacher_notes)}</p></div>`;
-}
-document.getElementById('printBtn').onclick=()=>window.print();
-document.getElementById('copyBtn').onclick=()=>navigator.clipboard.writeText(document.getElementById('doc').innerText);
+function seq(p,a,b){var r=[];for(var i=a;i<=b;i++)r.push(p+" "+i);return r;}
+var GRADES={"CBC/CBE":[{g:"Pre-Primary",o:["PP1","PP2"]},{g:"Primary",o:seq("Grade",1,6)},{g:"Junior School",o:seq("Grade",7,9)},{g:"Senior School",o:seq("Grade",10,12)}],"8-4-4":[{g:"Primary",o:seq("Standard",1,8)},{g:"Secondary",o:seq("Form",1,4)}],"Cambridge IGCSE":[{g:"Primary",o:seq("Stage",1,6)},{g:"Lower Secondary",o:seq("Stage",7,9)},{g:"IGCSE",o:["Year 10","Year 11"]},{g:"Advanced",o:["AS Level (Year 12)","A Level (Year 13)"]}],"IB":[{g:"PYP",o:seq("PYP",1,5)},{g:"MYP",o:seq("MYP",1,5)},{g:"DP",o:["DP 1","DP 2"]}],"CAPS":[{g:"Foundation",o:["Grade R"].concat(seq("Grade",1,3))},{g:"Intermediate",o:seq("Grade",4,6)},{g:"Senior",o:seq("Grade",7,9)},{g:"FET",o:seq("Grade",10,12)}],"NECTA":[{g:"Primary",o:["Standard I","Standard II","Standard III","Standard IV","Standard V","Standard VI","Standard VII"]},{g:"O-Level",o:seq("Form",1,4)},{g:"A-Level",o:["Form 5","Form 6"]}],"NCDC":[{g:"Primary",o:seq("P",1,7)},{g:"O-Level",o:seq("S",1,4)},{g:"A-Level",o:["S5","S6"]}],"NERDC":[{g:"Primary",o:seq("Primary",1,6)},{g:"Junior Secondary",o:seq("JSS",1,3)},{g:"Senior Secondary",o:seq("SSS",1,3)}],"NaCCA":[{g:"KG & Primary",o:["KG 1","KG 2"].concat(seq("Basic",1,6))},{g:"JHS",o:seq("Basic",7,9)},{g:"SHS",o:seq("SHS",1,3)}],"ZIMSEC":[{g:"Primary",o:seq("Grade",1,7)},{g:"O-Level",o:seq("Form",1,4)},{g:"A-Level",o:["Form 5","Form 6"]}],"WAEC":[{g:"Junior",o:seq("JSS",1,3)},{g:"Senior",o:seq("SSS",1,3)}],"Edexcel":[{g:"Primary",o:seq("Stage",1,6)},{g:"Lower Secondary",o:seq("Stage",7,9)},{g:"IGCSE",o:["Year 10","Year 11"]},{g:"Advanced",o:["AS Level (Year 12)","A Level (Year 13)"]}],"Common Core":[{g:"Elementary",o:["Kindergarten"].concat(seq("Grade",1,5))},{g:"Middle",o:seq("Grade",6,8)},{g:"High",o:seq("Grade",9,12)}]};
+var DEF={"CBC/CBE":"Grade 8","8-4-4":"Form 2","Cambridge IGCSE":"Year 10","IB":"MYP 3","CAPS":"Grade 10","NECTA":"Form 2","NCDC":"S2","NERDC":"JSS 2","NaCCA":"Basic 8","ZIMSEC":"Form 2","WAEC":"SSS 2","Edexcel":"Year 10","Common Core":"Grade 8"};
+var gradeSel=document.getElementById("grade"),currSel=document.getElementById("curr");
+function populateGrades(){var g=GRADES[currSel.value]||GRADES["CBC/CBE"];var prev=gradeSel.value;gradeSel.innerHTML=g.map(function(x){return '<optgroup label="'+x.g+'">'+x.o.map(function(v){return '<option>'+v+'</option>';}).join("")+'</optgroup>';}).join("");var all=g.reduce(function(a,x){return a.concat(x.o);},[]);var d=DEF[currSel.value]||all[0];gradeSel.value=all.indexOf(prev)>=0?prev:(all.indexOf(d)>=0?d:all[0]);}
+currSel.addEventListener("change",populateGrades);populateGrades();
+(function(){var w=document.getElementById("week");for(var i=1;i<=14;i++){var o=document.createElement("option");o.textContent="Week "+i;w.appendChild(o);}})();
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+var I18N={en:{out:"Learning Outcomes",intro:"By the end of this lesson, learners will be able to:",flow:"Lesson Flow",res:"Teaching Resources",diff:"Differentiation",ass:"Assessment & Rubric",notes:"Teacher Notes",plan:"Lesson Plan",dur:"Duration",subj:"Subject",grade:"Grade",wt:"Week / Term",marks:"Total marks",instr:"Instructions",wb:"Word bank",ext:"Extension",rub:"Rubric",ex:"Exemplar answers",err:"Common errors",obj:"Objective",mat:"Materials",grp:"Grouping",safe:"Safety",chk:"Success checklist",ans:"Answer",pts:"Marking points",q:"Question",task:"Task",scheme:"Marking scheme",auto:"Auto-markable",review:"Teacher review"},sw:{out:"Matokeo ya Kujifunza",intro:"Mwisho wa somo, wanafunzi wataweza:",flow:"Mtiririko wa Somo",res:"Nyenzo za Kufundisha",diff:"Utofautishaji",ass:"Tathmini na Rubriki",notes:"Maelezo ya Mwalimu",plan:"Mpango wa Somo",dur:"Muda",subj:"Somo",grade:"Darasa",wt:"Wiki / Muhula",marks:"Jumla ya alama",instr:"Maagizo",wb:"Orodha ya maneno",ext:"Upanuzi",rub:"Rubriki",ex:"Majibu ya mfano",err:"Makosa ya kawaida",obj:"Lengo",mat:"Vifaa",grp:"Uvikundi",safe:"Usalama",chk:"Orodha ya mafanikio",ans:"Jibu",pts:"Vipengele vya alama",q:"Swali",task:"Kazi",scheme:"Mpango wa alama",auto:"Kiotomatiki",review:"Mapitio ya mwalimu"}};
+var currentContent="",currentLesson=null,currentArtifactId=null,lastMark=null;
+var TYPE_LABEL={mcq:"Multiple choice",multi:"Multi-select",tf:"True / False",numeric:"Calculation",fill:"Fill in the blanks",match:"Matching",short:"Short answer",structured:"Structured",diagram:"Illustrative / labelling",essay:"Extended response"};
+function header(d,b,L,sub){return '<div style="border-bottom:2px solid var(--indigo);padding-bottom:1.4rem;margin-bottom:1.6rem"><div class="flex flex-wrap gap-2 mb-2"><span class="chip" style="background:var(--indigo);color:#fff">AI GENERATED</span><span class="chip" style="background:#DCFCE7;color:#166534">'+esc(d.curriculum)+'</span><span class="chip" style="background:#FEF3C7;color:#92400E">'+esc(d.grade_level)+'</span></div><h2 class="text-3xl font-extrabold" style="color:var(--indigo)">'+esc(d.title)+'</h2><p style="color:var(--mut)">'+esc(sub)+' · '+esc(d.duration)+(b.subtopic?' · '+esc(b.subtopic):'')+'</p><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><div class="stat"><p>'+L.dur+'</p><p>'+esc(d.duration)+'</p></div><div class="stat"><p>'+L.subj+'</p><p>'+esc(d.subject)+'</p></div><div class="stat"><p>'+L.grade+'</p><p>'+esc(d.grade_level)+'</p></div><div class="stat"><p>'+L.wt+'</p><p>'+esc((d.week||"—")+" / "+(d.term||"—"))+'</p></div></div></div>';}
+function schemeBlock(q,L){var pts=(q.points||[]).map(function(p){return '<div>'+esc(p.label)+' ('+p.mark+'): '+esc(p.desc)+'</div>';}).join("");return '<div class="answer"><strong>'+L.ans+':</strong> '+esc(q.answer)+(q.explain?'<div class="mt-1" style="color:var(--mut)">'+esc(q.explain)+'</div>':'')+(pts?'<div class="mt-2"><strong>'+L.pts+':</strong>'+pts+'</div>':'')+'</div>';}
+function answerInput(q){var n=q.no;
+ if(q.type==="mcq"||q.type==="tf"){var opts=q.type==="tf"?["True","False"]:q.options;return opts.map(function(o,i){return '<label class="optrow"><input type="radio" name="q'+n+'" value="'+(q.type==="tf"?o.toLowerCase():i)+'"><span><b>'+String.fromCharCode(65+i)+'.</b> '+esc(o)+'</span></label>';}).join("");}
+ if(q.type==="multi"){return q.options.map(function(o,i){return '<label class="optrow"><input type="checkbox" name="q'+n+'" value="'+i+'"><span>'+esc(o)+'</span></label>';}).join("");}
+ if(q.type==="numeric"){return '<input class="mt-2" data-q="'+n+'" placeholder="Your answer'+(q.numeric&&q.numeric.unit?' in '+esc(q.numeric.unit):'')+'">';}
+ if(q.type==="fill"){var h='';for(var i=0;i<(q.blanks||3);i++)h+='<input class="mt-2" data-q="'+n+'" data-i="'+i+'" placeholder="Blank '+(i+1)+'">';return h;}
+ if(q.type==="diagram"){var h='<div class="diagram"><p class="text-xs mb-2" style="color:var(--mut)">Label each numbered part.</p>';(q.labels_expected||[]).forEach(function(x,i){h+='<div class="flex items-center gap-2 mt-2"><span class="chip">'+(i+1)+'</span><input data-q="'+n+'" data-i="'+i+'" placeholder="Label '+(i+1)+'"></div>';});return h+'</div>';}
+ if(q.type==="match"){var h='<div class="mt-2">';(q.pairs||[]).forEach(function(p,i){h+='<div class="grid grid-cols-2 gap-2 items-center mt-2"><span class="text-sm font-semibold">'+esc(p.term)+'</span><select data-q="'+n+'" data-i="'+i+'"><option value="">— choose —</option>'+q.meanings.map(function(m){return '<option>'+esc(m)+'</option>';}).join("")+'</select></div>';});return h+'</div>';}
+ if(q.type==="essay"){return '<textarea class="mt-2" rows="6" data-q="'+n+'" placeholder="Write your extended response..."></textarea>';}
+ if(q.type==="structured"){return '<textarea class="mt-2" rows="4" data-q="'+n+'" placeholder="Step-by-step explanation..."></textarea>';}
+ return '<textarea class="mt-2" rows="2" data-q="'+n+'" placeholder="Your answer..."></textarea>';}
+function renderQuiz(d,b,L){var qs=(d.questions||[]).map(function(q){return '<div class="qcard" id="qc'+q.no+'"><div class="flex flex-wrap justify-between items-center gap-2 mb-2"><span class="chip" style="background:var(--indigo);color:#fff">'+L.q+' '+q.no+'</span><div class="flex gap-2"><span class="chip">'+esc(TYPE_LABEL[q.type]||q.type)+'</span><span class="chip" style="background:#FEF3C7;color:#92400E">'+q.marks+' marks</span>'+(q.auto?'':'<span class="chip" style="background:#E0E7FF;color:#3730A3">'+L.review+'</span>')+'</div></div><p class="font-medium mb-1">'+esc(q.stem)+'</p>'+answerInput(q)+schemeBlock(q,L)+'<div class="fb" id="fb'+q.no+'"></div></div>';}).join("");
+ return header(d,b,L,"Quiz")+'<div class="flex flex-wrap gap-3 mb-4"><div class="stat"><p>'+L.marks+'</p><p>'+d.total_marks+'</p></div><div class="stat"><p>'+L.auto+'</p><p>'+d.auto_markable+'</p></div><div class="stat"><p>'+L.review+'</p><p>'+d.review_marks+'</p></div></div><p style="color:var(--mut);font-size:.9rem" class="mb-4">'+esc(d.instructions)+'</p>'+qs;}
+function renderLesson(d,b,L){var oc=(d.outcomes||[]).map(function(o,i){return '<div class="oc"><b>'+(i+1)+'</b><span>'+esc(o)+'</span></div>';}).join("");var fl=(d.flow||[]).map(function(x,i){return '<div class="tl-item '+(i===0?"active":"")+'"><div class="tl-dot">'+String(i+1).padStart(2,"0")+'</div><div class="jf-card p-4"><div class="flex justify-between mb-1"><h3 class="font-bold" style="color:var(--indigo)">'+esc(x.step)+'</h3><span class="chip">'+esc(x.duration)+'</span></div><p style="color:var(--mut);font-size:.9rem">'+esc(x.content)+'</p></div></div>';}).join("");return header(d,b,L,L.plan)+'<h3 class="text-xl font-bold mb-2" style="color:var(--indigo)">'+L.out+'</h3><p style="color:var(--mut);font-size:.9rem" class="mb-3">'+L.intro+'</p><div class="space-y-2 mb-8">'+oc+'</div><h3 class="text-xl font-bold mb-4" style="color:var(--indigo)">'+L.flow+'</h3><div class="tl mb-8">'+fl+'</div><div class="grid md:grid-cols-2 gap-6 mb-8"><div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.res+'</h3><p style="color:var(--mut);font-size:.9rem">'+esc(d.resources)+'</p></div><div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.diff+'</h3><p style="color:var(--mut);font-size:.9rem">'+esc(d.differentiation)+'</p></div></div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.ass+'</h3><p style="color:var(--mut);font-size:.9rem" class="mb-6">'+esc(d.assessment)+'</p><div style="background:#FFFBEB;border-left:4px solid var(--amber);padding:1rem"><strong style="color:#92400E">'+L.notes+':</strong> <span style="color:#92400E">'+esc(d.teacher_notes)+'</span></div>';}
+function renderWorksheet(d,b,L){var wb=(d.word_bank||[]).map(function(w){return '<span class="wb">'+esc(w)+'</span>';}).join("");var ts=(d.tasks||[]).map(function(t){return '<div class="qcard"><div class="flex justify-between mb-2"><span class="chip" style="background:var(--indigo);color:#fff">'+L.task+' '+t.no+'</span><span class="chip">'+esc(t.type)+'</span></div><p class="font-medium">'+esc(t.prompt)+'</p><div class="lines" style="--n:'+t.lines+'"></div><div class="answer"><strong>'+L.ans+':</strong> '+esc(t.answer)+'</div></div>';}).join("");return header(d,b,L,"Worksheet")+'<p style="color:var(--mut);font-size:.9rem" class="mb-3">'+esc(d.instructions)+'</p><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.wb+'</h3><div class="mb-5">'+wb+'</div>'+ts+'<div style="background:#EEF0F6;border:1px solid var(--line);border-radius:.6rem;padding:.9rem 1rem" class="mt-4"><strong style="color:var(--indigo)">'+L.ext+':</strong> '+esc(d.extension)+'</div>';}
+function renderMarkingGuide(d,b,L){var head='<tr><th style="width:22%">'+L.rub+'</th>'+d.levels.map(function(l){return '<th>'+esc(l)+'</th>';}).join("")+'</tr>';var rows=(d.rubric||[]).map(function(r){return '<tr><td>'+esc(r.name)+' <span class="chip">/'+r.max+'</span></td>'+r.descriptors.map(function(x){return '<td>'+esc(x)+'</td>';}).join("")+'</tr>';}).join("");var ex=(d.exemplars||[]).map(function(e){return '<div class="qcard"><p class="font-medium">'+esc(e.q)+'</p><div class="answer" style="display:block"><strong>'+L.ans+':</strong> '+esc(e.answer)+' <span class="chip">'+e.marks+' marks</span></div></div>';}).join("");var er=(d.common_errors||[]).map(function(x){return '<div class="check"><span>'+esc(x)+'</span></div>';}).join("");return header(d,b,L,"Marking Guide")+'<div class="stat mb-4" style="display:inline-block"><p>'+L.marks+'</p><p>'+d.total_marks+'</p></div><div style="overflow-x:auto" class="mb-6"><table class="rubric">'+head+rows+'</table></div><div style="background:#EEF0F6;border:1px solid var(--line);border-radius:.6rem;padding:.9rem 1rem" class="mb-6"><strong style="color:var(--indigo)">Auto-marking policy:</strong> '+esc(d.auto_policy)+'</div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.ex+'</h3>'+ex+'<h3 class="font-bold mb-2 mt-6" style="color:var(--indigo)">'+L.err+'</h3>'+er+'<div style="background:#FFFBEB;border-left:4px solid var(--amber);padding:1rem" class="mt-6"><strong style="color:#92400E">'+L.notes+':</strong> <span style="color:#92400E">'+esc(d.notes)+'</span></div>';}
+function renderActivity(d,b,L){var mat=(d.materials||[]).map(function(m){return '<span class="wb">'+esc(m)+'</span>';}).join("");var st=(d.steps||[]).map(function(x,i){return '<div class="tl-item '+(i===0?"active":"")+'"><div class="tl-dot">'+String(i+1).padStart(2,"0")+'</div><div class="jf-card p-4"><div class="flex justify-between mb-1"><h3 class="font-bold" style="color:var(--indigo)">'+esc(x.step)+'</h3><span class="chip">'+esc(x.duration)+'</span></div><p style="color:var(--mut);font-size:.9rem">'+esc(x.content)+'</p></div></div>';}).join("");var ck=(d.checklist||[]).map(function(c){return '<div class="check"><span>'+esc(c)+'</span></div>';}).join("");return header(d,b,L,"Learning Activity")+'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.obj+'</h3><p style="color:var(--mut);font-size:.9rem" class="mb-5">'+esc(d.objective)+'</p><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.mat+'</h3><div class="mb-5">'+mat+'</div><h3 class="text-xl font-bold mb-4" style="color:var(--indigo)">'+L.flow+'</h3><div class="tl mb-6">'+st+'</div><div class="grid md:grid-cols-2 gap-6 mb-6"><div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.grp+'</h3><p style="color:var(--mut);font-size:.9rem">'+esc(d.grouping)+'</p></div><div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.diff+'</h3><p style="color:var(--mut);font-size:.9rem">'+esc(d.differentiation)+'</p></div></div><div class="safety mb-6"><strong style="color:var(--red)">'+L.safe+':</strong> <span style="color:#7F1D1D">'+esc(d.safety)+'</span></div><h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.chk+'</h3>'+ck;}
+function renderAny(d,b){var L=I18N[d.language==="sw"?"sw":"en"];var k=d.kind||"lesson_plan";if(k==="quiz")return renderQuiz(d,b,L);if(k==="worksheet")return renderWorksheet(d,b,L);if(k==="marking_guide")return renderMarkingGuide(d,b,L);if(k==="activity")return renderActivity(d,b,L);return renderLesson(d,b,L);}
+function collect(){var out={};(currentLesson.questions||[]).forEach(function(q){var n=q.no;
+ if(q.type==="mcq"||q.type==="tf"){var el=document.querySelector('input[name="q'+n+'"]:checked');out[n]=el?el.value:null;}
+ else if(q.type==="multi"){out[n]=Array.prototype.slice.call(document.querySelectorAll('input[name="q'+n+'"]:checked')).map(function(x){return x.value;});}
+ else if(q.type==="fill"||q.type==="diagram"||q.type==="match"){out[n]=Array.prototype.slice.call(document.querySelectorAll('[data-q="'+n+'"]')).map(function(x){return x.value;});}
+ else{var t=document.querySelector('[data-q="'+n+'"]');out[n]=t?t.value:"";}});return out;}
+function showResults(r){var doc=document.getElementById("doc");var old=document.getElementById("scorecard");if(old)old.remove();
+ var card=document.createElement("div");card.id="scorecard";card.className="score";
+ card.innerHTML='<div class="flex flex-wrap items-center justify-between gap-4"><div><p class="text-xs uppercase tracking-widest opacity-80">Auto-marked result</p><p class="big">'+r.awarded+' / '+r.total_marks+'</p></div><div><p class="text-xs uppercase tracking-widest opacity-80">Percentage</p><p class="big">'+r.percentage+'%</p></div><div><p class="text-xs uppercase tracking-widest opacity-80">Performance</p><p class="font-bold text-lg">'+esc(r.band)+'</p></div><div><p class="text-xs uppercase tracking-widest opacity-80">Teacher review</p><p class="font-bold text-lg">'+(r.pending.length?r.pending.length+" item(s)":"None")+'</p></div></div>';
+ doc.insertBefore(card,doc.firstChild);
+ r.results.forEach(function(x){var fb=document.getElementById("fb"+x.no);if(!fb)return;fb.className="fb "+x.status;fb.textContent=x.awarded+" / "+x.marks+" — "+x.feedback;});
+ lucide.createIcons();}
+var f=document.getElementById("genform"),btn=document.getElementById("btn"),err=document.getElementById("err");
+f.addEventListener("submit",async function(e){e.preventDefault();err.classList.add("hidden");btn.disabled=true;btn.innerHTML="Generating...";
+ var token=document.querySelector("[name=csrfmiddlewaretoken]").value;
+ var body={artifact_type:document.getElementById("atype").value,topic:document.getElementById("topic").value,subtopic:document.getElementById("subtopic").value,grade_level:gradeSel.value,curriculum:currSel.value,week:document.getElementById("week").value,term:document.getElementById("term").value,duration:document.getElementById("duration").value,language:document.getElementById("language").value,count:document.getElementById("count").value,difficulty:document.getElementById("difficulty").value,mix:document.getElementById("mix").value};
+ try{var r=await fetch("/api/teacher/artifacts/generate/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":token,"Content-Type":"application/json"},body:JSON.stringify(body)});
+ var raw=await r.text();if(!r.ok)throw new Error("HTTP "+r.status+": "+raw.slice(0,300));
+ var d=JSON.parse(raw);currentContent=d.content||"";currentArtifactId=d.id;lastMark=null;
+ try{currentLesson=JSON.parse(d.content);}catch(_){currentLesson=null;}
+ document.getElementById("empty").classList.add("hidden");document.getElementById("out").classList.remove("hidden");
+ var doc=document.getElementById("doc");doc.classList.remove("show-answers");
+ doc.innerHTML=currentLesson?renderAny(currentLesson,body):('<pre style="white-space:pre-wrap">'+esc(d.content)+'</pre>');
+ document.getElementById("markBtn").classList.toggle("hidden",!(currentLesson&&currentLesson.kind==="quiz"));
+ lucide.createIcons();
+ }catch(ex){err.textContent=ex.message;err.classList.remove("hidden");}
+ finally{btn.disabled=false;btn.innerHTML='<i data-lucide="sparkles"></i> Generate Material';lucide.createIcons();}});
+document.getElementById("markBtn").onclick=async function(){if(!currentArtifactId)return;var b=this;b.disabled=true;b.innerHTML="Marking...";
+ try{var token=document.querySelector("[name=csrfmiddlewaretoken]").value;
+ var r=await fetch("/api/teacher/artifacts/automark/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":token,"Content-Type":"application/json"},body:JSON.stringify({artifact_id:currentArtifactId,answers:collect()})});
+ var raw=await r.text();if(!r.ok)throw new Error(raw.slice(0,200));lastMark=JSON.parse(raw);showResults(lastMark);
+ }catch(ex){err.textContent=ex.message;err.classList.remove("hidden");}
+ finally{b.disabled=false;b.innerHTML='<i data-lucide="check-check"></i> Auto-mark';lucide.createIcons();}};
+document.getElementById("ansBtn").onclick=function(){var doc=document.getElementById("doc");var on=doc.classList.toggle("show-answers");this.innerHTML=on?'<i data-lucide="eye-off"></i> Hide scheme':'<i data-lucide="eye"></i> Marking scheme';lucide.createIcons();};
+document.getElementById("printBtn").onclick=function(){window.print();};
+</script>
+<script src="/static/js/studio_pdf.js"></script>
+
+<style>
+  .aa-card{background:var(--card);border:1px solid var(--line);border-radius:1rem;box-shadow:0 6px 18px -8px rgba(27,31,75,.14);padding:1.1rem 1.2rem;margin-bottom:1rem;}
+  .aa-card h4{font-family:Manrope;font-weight:800;color:var(--indigo);font-size:.95rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.45rem;}
+  .aa-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+  .aa-table th,.aa-table td{border:1px solid var(--line);padding:.45rem .55rem;text-align:left;vertical-align:top;}
+  .aa-table th{background:var(--indigo);color:#fff;font-family:Manrope;}
+  .aa-table tr:nth-child(even) td{background:var(--soft);}
+  .pill{display:inline-block;font-size:.66rem;font-weight:800;padding:.15rem .5rem;border-radius:9999px;}
+  .pill.correct{background:#DCFCE7;color:#166534;} .pill.partial{background:#FEF3C7;color:#92400E;}
+  .pill.wrong{background:#FEE2E2;color:#991B1B;} .pill.review{background:#E0E7FF;color:#3730A3;} .pill.blank{background:#F1F5F9;color:#475569;}
+  .hist{display:flex;justify-content:space-between;gap:.6rem;padding:.5rem .65rem;border:1px solid var(--line);border-radius:.55rem;margin-top:.45rem;font-size:.8rem;background:#fff;}
+  .hist:hover{background:var(--soft);}
+</style>
+<script>
+(function(){
+  function el(html){var d=document.createElement("div");d.innerHTML=html.trim();return d.firstChild;}
+  function ensurePanels(){
+    if(!document.getElementById("reportPanel")){
+      var doc=document.getElementById("doc");
+      var rp=el('<div id="reportPanel" class="no-print" style="margin-top:1.6rem"></div>');
+      doc.appendChild(rp);
+    }
+    if(!document.getElementById("histPanel")){
+      var out=document.getElementById("out");
+      var hp=el('<div id="histPanel" class="aa-card no-print" style="display:none"><h4><i data-lucide="history"></i> Assessment history</h4><div id="histList"></div></div>');
+      out.parentNode.insertBefore(hp,out);
+    }
+    if(!document.getElementById("repBtn")){
+      var bar=document.getElementById("printBtn").parentNode;
+      var b=el('<button id="repBtn" class="jf-btn ghost flex-1 no-print"><i data-lucide="file-bar-chart-2"></i> Report PDF</button>');
+      bar.insertBefore(b,document.getElementById("printBtn"));
+      b.onclick=reportPdf;
+    }
+    loadHistory();
+    if(window.lucide)lucide.createIcons();
+  }
+  function loadHistory(){
+    fetch("/api/teacher/artifacts/history/",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(rows){
+      var panel=document.getElementById("histPanel");if(!panel)return;
+      if(!rows||!rows.length){panel.style.display="none";return;}
+      panel.style.display="block";
+      document.getElementById("histList").innerHTML=rows.map(function(x){
+        return '<div class="hist"><span><b>'+esc(x.topic||"Quiz")+'</b> · '+esc(x.date)+'</span><span>'+x.awarded+'/'+x.total+' ('+x.percent+'%)</span><span class="pill '+(x.percent>=65?"correct":(x.percent>=50?"partial":"wrong"))+'">'+esc(x.band)+'</span></div>';
+      }).join("");
+    }).catch(function(){});
+  }
+  function renderReport(){
+    ensurePanels();
+    var r=window.lastMark;if(!r)return;
+    var L=(window.I18N&&window.I18N[(window.currentLesson&&window.currentLesson.language==="sw")?"sw":"en"])||window.I18N.en;
+    var rows=(r.results||[]).map(function(x){
+      return '<tr><td>'+x.no+'</td><td>'+(window.TYPE_LABEL[x.type]||x.type)+'</td><td>'+x.marks+'</td><td><b>'+x.awarded+'</b></td><td><span class="pill '+x.status+'">'+x.status+'</span></td><td>'+esc(x.feedback)+'</td></tr>';
+    }).join("");
+    var types=Object.keys(r.by_type||{}).map(function(k){
+      var v=r.by_type[k];return '<tr><td>'+(window.TYPE_LABEL[k]||k)+'</td><td>'+v.awarded+' / '+v.marks+'</td><td>'+v.pct+'%</td></tr>';
+    }).join("");
+    var adv=(r.advice||[]).map(function(a){return '<li>'+esc(a)+'</li>';}).join("");
+    document.getElementById("reportPanel").innerHTML=
+      '<div class="aa-card"><h4><i data-lucide="clipboard-check"></i> Auto-assessment report</h4>'+
+      '<div style="overflow-x:auto"><table class="aa-table"><tr><th>'+L.q+'</th><th>Type</th><th>Marks</th><th>Awarded</th><th>Status</th><th>Feedback</th></tr>'+rows+'</table></div></div>'+
+      '<div class="grid md:grid-cols-2 gap-4"><div class="aa-card"><h4><i data-lucide="pie-chart"></i> Performance by question type</h4>'+
+      '<table class="aa-table"><tr><th>Type</th><th>Awarded</th><th>%</th></tr>'+types+'</table></div>'+
+      '<div class="aa-card"><h4><i data-lucide="lightbulb"></i> Recommended next steps</h4><ul style="margin:0;padding-left:1.1rem;font-size:.85rem;color:var(--mut)">'+adv+'</ul></div></div>';
+    if(window.lucide)lucide.createIcons();
+  }
+  function reportPdf(){
+    var r=window.lastMark;if(!r||!window.jspdf){window.print();return;}
+    var doc=new window.jspdf.jsPDF({unit:"mm",format:"a4",compress:true});
+    var W=210,M=16,CW=W-2*M,y=0;
+    doc.setFillColor(27,31,75);doc.rect(0,0,W,26,"F");
+    doc.setFillColor(201,162,39);doc.rect(0,26,W,1.4,"F");
+    doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(8.5);
+    doc.text("JIFUNZE AI  ·  AUTO-ASSESSMENT REPORT",M,10);
+    doc.setFontSize(15);doc.text(String((window.currentLesson&&window.currentLesson.title)||"Assessment").slice(0,70),M,19);
+    y=36;
+    doc.setTextColor(15,23,42);doc.setFontSize(10);doc.setFont("helvetica","bold");
+    doc.text("Score: "+r.awarded+" / "+r.total_marks+"   ("+r.percentage+"%)",M,y);y+=6;
+    doc.text("Performance: "+r.band,M,y);y+=6;
+    doc.text("Teacher review required: "+(r.pending.length?r.pending.length+" item(s)":"None"),M,y);y+=6;
+    doc.text("Date: "+new Date().toLocaleString(),M,y);y+=10;
+    if(typeof doc.autoTable==="function"){
+      doc.autoTable({startY:y,margin:{left:M,right:M,top:18},
+        head:[["Q","Type","Marks","Awarded","Status","Feedback"]],
+        body:(r.results||[]).map(function(x){return [x.no,(window.TYPE_LABEL[x.type]||x.type),x.marks,x.awarded,x.status,String(x.feedback).slice(0,90)];}),
+        styles:{font:"helvetica",fontSize:7.6,cellPadding:2.2,lineColor:[228,225,214],lineWidth:0.2,valign:"top"},
+        headStyles:{fillColor:[27,31,75],textColor:255,fontStyle:"bold"},
+        alternateRowStyles:{fillColor:[246,244,236]},
+        columnStyles:{0:{cellWidth:9},2:{cellWidth:14},3:{cellWidth:16},4:{cellWidth:18}}});
+      y=(doc.lastAutoTable?doc.lastAutoTable.finalY:y)+8;
+    }
+    doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(27,31,75);
+    doc.text("RECOMMENDED NEXT STEPS",M,y);y+=5;
+    doc.setFont("helvetica","normal");doc.setTextColor(100,116,139);
+    (r.advice||[]).forEach(function(a){var ls=doc.splitTextToSize(a,CW);ls.forEach(function(l){doc.text(l,M,y);y+=4.6;});});
+    var n=doc.getNumberOfPages();
+    for(var p=1;p<=n;p++){doc.setPage(p);doc.setDrawColor(228,225,214);doc.line(M,283,W-M,283);doc.setFontSize(7.5);doc.setTextColor(100,116,139);doc.text("Generated by JIFUNZE AI auto-assessment engine",M,288);doc.text("Page "+p+" of "+n,W-M,288,{align:"right"});}
+    doc.save("assessment_report.pdf");
+  }
+  function wrap(){
+    var mb=document.getElementById("markBtn");if(!mb||mb.__wrapped)return;mb.__wrapped=true;
+    var orig=mb.onclick;
+    mb.onclick=function(){var self=this,args=arguments;
+      return Promise.resolve(orig?orig.apply(self,args):null).then(function(){setTimeout(renderReport,60);loadHistory();});};
+    ensurePanels();
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",wrap);else wrap();
+  document.getElementById("genform").addEventListener("submit",function(){setTimeout(ensurePanels,400);});
+})();
+</script>
+
+
+<style>
+  .aa-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem;}
+  .aa-btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;border-radius:.6rem;padding:.5rem .8rem;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;transition:.15s;}
+  .aa-btn:hover{background:var(--soft);border-color:var(--indigo);color:var(--indigo);transform:translateY(-1px);}
+  .aa-btn:disabled{opacity:.55;cursor:wait;transform:none;}
+  .aa-btn i,.aa-btn svg{width:14px;height:14px;}
+  .hintbox{margin-top:.5rem;background:#EEF6FF;border:1px dashed #2563EB;border-radius:.5rem;padding:.45rem .65rem;font-size:.8rem;color:#1E40AF;}
+  .enh-box{border-radius:.7rem;padding:.9rem 1rem;margin-top:1rem;font-size:.88rem;}
+  .enh-red{background:#FEF2F2;border-left:4px solid var(--red);}
+  .enh-ind{background:#EEF2FF;border-left:4px solid var(--indigo);}
+</style>
+<script>
+(function(){
+  var ACTIONS=[["regenerate","refresh-ccw","Regenerate"],["improve","sparkles","Improve"],["expand","plus-circle","Expand"],
+               ["simplify","minus-circle","Simplify"],["translate","languages","Translate"],["save","bookmark","Save to Library"]];
+  function toast(msg,tone){var t=document.createElement("div");t.textContent=msg;t.style.cssText="position:fixed;right:22px;bottom:22px;z-index:9999;padding:12px 18px;border-radius:12px;font:600 13px Inter,sans-serif;color:#fff;box-shadow:0 12px 30px -10px rgba(27,31,75,.6);background:"+(tone==="err"?"#DC2626":"#1B1F4B");document.body.appendChild(t);setTimeout(function(){t.remove();},2600);}
+  function readBody(){return {artifact_type:document.getElementById("atype").value,topic:document.getElementById("topic").value,subtopic:document.getElementById("subtopic").value,grade_level:document.getElementById("grade").value,curriculum:document.getElementById("curr").value,week:document.getElementById("week").value,term:document.getElementById("term").value,duration:document.getElementById("duration").value,language:document.getElementById("language").value,count:document.getElementById("count").value,difficulty:document.getElementById("difficulty").value,mix:document.getElementById("mix").value};}
+  function decorate(d){
+    var doc=document.getElementById("doc");
+    var old=document.getElementById("enh");if(old)old.remove();
+    var html="";
+    if(d.bloom&&d.bloom.length)html+='<div class="enh-box enh-ind"><b style="color:var(--indigo)">Bloom levels targeted:</b> '+d.bloom.map(function(x){return '<span class="wb">'+esc(x)+'</span>';}).join("")+'</div>';
+    if(d.word_bank&&d.kind==="quiz")html+='<div class="enh-box enh-ind"><b style="color:var(--indigo)">Word bank:</b> '+d.word_bank.map(function(x){return '<span class="wb">'+esc(x)+'</span>';}).join("")+'</div>';
+    if(d.misconceptions&&d.misconceptions.length)html+='<div class="enh-box enh-red"><b style="color:var(--red)">Common misconceptions to address:</b><ul style="margin:.4rem 0 0 1.1rem">'+d.misconceptions.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul></div>';
+    if(d.homework)html+='<div class="enh-box enh-ind"><b style="color:var(--indigo)">Homework / extension:</b> '+esc(d.homework)+'</div>';
+    if(html){var e=document.createElement("div");e.id="enh";e.className="no-print";e.innerHTML=html;doc.appendChild(e);}
+    (d.questions||[]).forEach(function(q){
+      var card=document.getElementById("qc"+q.no);if(!card||!q.hint)return;
+      if(card.querySelector(".hintbox"))return;
+      var stem=card.querySelector("p.font-medium");if(stem)stem.insertAdjacentHTML("afterend",'<div class="hintbox">'+esc(q.hint)+'</div>');
+    });
+  }
+  function show(d,id){
+    window.currentContent=JSON.stringify(d);window.currentLesson=d;window.currentArtifactId=id;window.lastMark=null;
+    var doc=document.getElementById("doc");doc.classList.remove("show-answers");
+    doc.innerHTML=renderAny(d,readBody());
+    var sc=document.getElementById("scorecard");if(sc)sc.remove();
+    document.getElementById("markBtn").classList.toggle("hidden",!(d&&d.kind==="quiz"));
+    decorate(d);
+    if(window.lucide)lucide.createIcons();
+  }
+  function bar(){
+    if(document.getElementById("aaBar"))return;
+    var out=document.getElementById("out");
+    var b=document.createElement("div");b.id="aaBar";b.className="aa-bar no-print";
+    b.innerHTML=ACTIONS.map(function(a){return '<button class="aa-btn" data-act="'+a[0]+'"><i data-lucide="'+a[1]+'"></i> '+a[2]+'</button>';}).join("");
+    out.parentNode.insertBefore(b,out);
+    b.addEventListener("click",function(ev){
+      var btn=ev.target.closest(".aa-btn");if(!btn||!window.currentArtifactId)return;
+      var act=btn.dataset.act;var label=btn.innerHTML;btn.disabled=true;btn.innerHTML="Working...";
+      var token=document.querySelector("[name=csrfmiddlewaretoken]").value;
+      fetch("/api/teacher/artifacts/transform/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":token,"Content-Type":"application/json"},body:JSON.stringify({artifact_id:window.currentArtifactId,action:act})})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+      .then(function(res){
+        if(!res.ok)throw new Error(res.j.detail||"Transform failed");
+        if(act==="save"){toast("Saved to Library: "+res.j.title);return;}
+        var d=JSON.parse(res.j.content);show(d,res.j.id);
+        toast({regenerate:"Regenerated a fresh version",improve:"Improved with misconceptions, Bloom tags & explanations",expand:"Expanded with extra items & homework",simplify:"Simplified for foundation learners",translate:"Translated document"}[act]||"Updated");
+      })
+      .catch(function(e){toast(e.message,"err");})
+      .finally(function(){btn.disabled=false;btn.innerHTML=label;if(window.lucide)lucide.createIcons();});
+    });
+    if(window.lucide)lucide.createIcons();
+  }
+  function hook(){
+    bar();
+    var f=document.getElementById("genform");
+    f.addEventListener("submit",function(){setTimeout(bar,400);});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",hook);else hook();
+})();
+</script>
+
+
+<style>
+  .rc-item{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:.6rem;padding:.55rem .7rem;margin-top:.45rem;background:#fff;cursor:pointer;transition:.15s;font-size:.8rem;}
+  .rc-item:hover{background:var(--soft);border-color:var(--indigo);}
+  .rc-item b{display:block;color:var(--indigo);font-size:.82rem;}
+  .rc-item span{color:var(--mut);font-size:.7rem;}
+  .notes-edit{outline:none;border:1px dashed transparent;border-radius:.4rem;padding:.2rem .3rem;min-height:1.2em;}
+  .notes-edit:focus{border-color:var(--indigo);background:#fff;}
+  .notes-save{font-size:.7rem;font-weight:700;color:#fff;background:var(--green2);border:none;border-radius:.45rem;padding:.3rem .6rem;cursor:pointer;margin-left:.5rem;}
+  details.res-panel{border:1px solid var(--line);border-radius:.6rem;padding:.6rem .8rem;background:var(--soft);}
+  details.res-panel summary{cursor:pointer;font-weight:700;color:var(--indigo);font-size:.9rem;}
+</style>
+<script>
+(function(){
+  function readBody(){return {artifact_type:document.getElementById("atype").value,topic:document.getElementById("topic").value,subtopic:document.getElementById("subtopic").value,grade_level:document.getElementById("grade").value,curriculum:document.getElementById("curr").value,week:document.getElementById("week").value,term:document.getElementById("term").value,duration:document.getElementById("duration").value,language:document.getElementById("language").value,count:document.getElementById("count").value,difficulty:document.getElementById("difficulty").value,mix:document.getElementById("mix").value};}
+  function langOf(d){return (window.I18N&&window.I18N[d&&d.language==="sw"?"sw":"en"])||window.I18N.en;}
+  function enhance(d){
+    var doc=document.getElementById("doc");
+    var old=document.getElementById("enh");if(old)old.remove();
+    var html="";
+    if(d.bloom&&d.bloom.length)html+='<div class="enh-box enh-ind" style="border-radius:.7rem;padding:.9rem 1rem;margin-top:1rem;font-size:.88rem;background:#EEF2FF;border-left:4px solid var(--indigo)"><b style="color:var(--indigo)">Bloom levels:</b> '+d.bloom.map(function(x){return '<span class="wb">'+esc(x)+'</span>';}).join("")+'</div>';
+    if(d.word_bank&&d.kind==="quiz")html+='<div style="border-radius:.7rem;padding:.9rem 1rem;margin-top:1rem;font-size:.88rem;background:#EEF2FF;border-left:4px solid var(--indigo)"><b style="color:var(--indigo)">Word bank:</b> '+d.word_bank.map(function(x){return '<span class="wb">'+esc(x)+'</span>';}).join("")+'</div>';
+    if(d.misconceptions&&d.misconceptions.length)html+='<div style="border-radius:.7rem;padding:.9rem 1rem;margin-top:1rem;font-size:.88rem;background:#FEF2F2;border-left:4px solid var(--red)"><b style="color:var(--red)">Common misconceptions:</b><ul style="margin:.4rem 0 0 1.1rem">'+d.misconceptions.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul></div>';
+    if(d.homework)html+='<div style="border-radius:.7rem;padding:.9rem 1rem;margin-top:1rem;font-size:.88rem;background:#EEF2FF;border-left:4px solid var(--indigo)"><b style="color:var(--indigo)">Homework / extension:</b> '+esc(d.homework)+'</div>';
+    if(html){var e=document.createElement("div");e.id="enh";e.innerHTML=html;doc.appendChild(e);}
+    (d.questions||[]).forEach(function(q){
+      var card=document.getElementById("qc"+q.no);if(!card||!q.hint||card.querySelector(".hintbox"))return;
+      var stem=card.querySelector("p.font-medium");if(stem)stem.insertAdjacentHTML("afterend",'<div class="hintbox" style="margin-top:.5rem;background:#EEF6FF;border:1px dashed #2563EB;border-radius:.5rem;padding:.45rem .65rem;font-size:.8rem;color:#1E40AF">'+esc(q.hint)+'</div>');
+    });
+  }
+  function wireNotes(d){
+    if(!d||d.kind!=="lesson_plan")return;
+    var boxes=document.querySelectorAll('#doc div[style*="FFFBEB"]');
+    boxes.forEach(function(box){
+      var p=box.querySelector("p:last-child");if(!p)return;
+      p.classList.add("notes-edit");p.contentEditable="true";p.dataset.notes="1";
+      if(!box.querySelector(".notes-save")){
+        var h=box.querySelector("h3");if(!h)return;
+        var b=document.createElement("button");b.className="notes-save";b.textContent="Save notes";
+        b.onclick=function(){
+          var token=document.querySelector("[name=csrfmiddlewaretoken]").value;
+          fetch("/api/teacher/artifacts/notes/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":token,"Content-Type":"application/json"},body:JSON.stringify({artifact_id:window.currentArtifactId,notes:p.innerText})})
+          .then(function(r){return r.json();}).then(function(j){ if(j.saved){b.textContent="Saved ✓";setTimeout(function(){b.textContent="Save notes";},1500);} });
+        };
+        h.appendChild(b);
+      }
+    });
+  }
+  function collapseResources(d){
+    var L=langOf(d);
+    var heads=document.querySelectorAll("#doc h3");
+    heads.forEach(function(h){
+      if(h.textContent.trim()!==L.res)return;
+      var p=h.nextElementSibling;if(!p||p.tagName!=="P")return;
+      if(h.parentElement.tagName==="DETAILS")return;
+      var det=document.createElement("details");det.className="res-panel";
+      var sum=document.createElement("summary");sum.textContent=L.res;
+      h.parentNode.insertBefore(det,h);det.appendChild(sum);det.appendChild(p);h.remove();
+      det.open=false;
+    });
+  }
+  function openDoc(row){
+    var d;try{d=JSON.parse(row.content);}catch(e){return;}
+    window.currentContent=row.content;window.currentLesson=d;window.currentArtifactId=row.id;window.lastMark=null;
+    document.getElementById("empty").classList.add("hidden");
+    document.getElementById("out").classList.remove("hidden");
+    var doc=document.getElementById("doc");doc.classList.remove("show-answers");
+    doc.innerHTML=renderAny(d,readBody());
+    var sc=document.getElementById("scorecard");if(sc)sc.remove();
+    var rp=document.getElementById("reportPanel");if(rp)rp.innerHTML="";
+    document.getElementById("markBtn").classList.toggle("hidden",!(d&&d.kind==="quiz"));
+    enhance(d);wireNotes(d);collapseResources(d);
+    if(window.lucide)lucide.createIcons();
+  }
+  function loadRecent(){
+    fetch("/api/teacher/artifacts/recent/",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(rows){
+      var list=document.getElementById("recentList");if(!list)return;
+      if(!rows||!rows.length){list.innerHTML='<p style="color:var(--mut);font-size:.75rem">No materials yet.</p>';return;}
+      list.innerHTML=rows.map(function(x,i){
+        return '<button class="rc-item" data-i="'+i+'"><b>'+esc(x.title)+'</b><span>'+esc(x.artifact_type.replace("_"," "))+' · '+esc(x.grade_level||"—")+' · '+esc(x.created_at)+'</span></button>';
+      }).join("");
+      Array.prototype.forEach.call(list.querySelectorAll(".rc-item"),function(btn){
+        btn.onclick=function(){openDoc(rows[parseInt(btn.dataset.i,10)]);};
+      });
+    }).catch(function(){});
+  }
+  function panel(){
+    if(document.getElementById("recentCard"))return;
+    var formCard=document.getElementById("genform").closest(".jf-card");
+    var card=document.createElement("div");card.id="recentCard";card.className="jf-card p-5 no-print";card.style.marginTop="1.2rem";
+    card.innerHTML='<h3 style="font-family:Manrope;font-weight:800;color:var(--indigo);font-size:.95rem;display:flex;align-items:center;gap:.4rem"><i data-lucide="history"></i> Recent materials</h3><div id="recentList"></div>';
+    formCard.parentNode.insertBefore(card,formCard.nextSibling);
+    if(window.lucide)lucide.createIcons();
+    loadRecent();
+    var t=null;
+    new MutationObserver(function(){clearTimeout(t);t=setTimeout(loadRecent,900);}).observe(document.getElementById("doc"),{childList:true,subtree:true});
+  }
+  function hook(){panel();}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",hook);else hook();
+  document.getElementById("genform").addEventListener("submit",function(){setTimeout(function(){var d=window.currentLesson;enhance(d);wireNotes(d);collapseResources(d);},500);});
+})();
+</script>
+
+
+<style>
+  .kpi{background:var(--soft);border:1px solid var(--line);border-radius:.8rem;padding:.75rem .9rem;}
+  .kpi p:first-child{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;}
+  .kpi .v{font-family:Manrope;font-weight:800;font-size:1.5rem;line-height:1.15;color:var(--indigo);}
+  .kpi .s{font-size:.68rem;color:var(--mut);}
+  .bar-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem;font-size:.72rem;}
+  .bar-row .lbl{width:74px;color:var(--mut);font-weight:600;flex-shrink:0;}
+  .bar-row .track{flex:1;background:#EDEBE3;border-radius:9999px;height:8px;overflow:hidden;}
+  .bar-row .fill{height:100%;border-radius:9999px;background:linear-gradient(90deg,var(--indigo),#4550A6);}
+  .bar-row .num{width:22px;text-align:right;font-weight:700;color:var(--indigo);}
+  .spark{display:flex;align-items:flex-end;gap:5px;height:64px;}
+  .spark .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;}
+  .spark .b{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--green),#0b8457);min-height:3px;}
+  .spark .d{font-size:.6rem;color:var(--mut);font-weight:600;}
+  .dash-h{font-family:Manrope;font-weight:800;color:var(--indigo);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;}
+</style>
+<script>
+(function(){
+  function kpi(label,value,sub,color){
+    return '<div class="kpi"><p>'+label+'</p><p class="v"'+(color?' style="color:'+color+'"':'')+'>'+value+'</p><p class="s">'+(sub||"")+'</p></div>';
+  }
+  function render(s){
+    var strip=document.getElementById("dashStrip");if(!strip)return;
+    var avg=s.avg_percent==null?"—":s.avg_percent+"%";
+    var avgColor=s.avg_percent==null?"var(--mut)":(s.avg_percent>=65?"var(--green2)":(s.avg_percent>=50?"var(--amber)":"var(--red)"));
+    var kpis=kpi("Materials generated",s.total||0,"all artifact types")+
+             kpi("Auto-mark average",avg,s.marks_count?s.marks_count+" quizzes marked":"no quizzes marked yet",avgColor)+
+             kpi("Pending review",s.pending_review||0,"items needing teacher judgement",s.pending_review?"var(--amber)":"var(--mut)")+
+             kpi("Saved to library",s.saved||0,"reusable school resources")+
+             kpi("AI refinements",Object.keys(s.transforms||{}).reduce(function(a,k){return a+s.transforms[k];},0),"regenerate / improve / expand / simplify / translate");
+    var types=Object.keys(s.by_type||{});
+    var maxT=Math.max.apply(null,types.map(function(k){return s.by_type[k];}).concat([1]));
+    var bars=types.map(function(k){
+      var v=s.by_type[k];
+      return '<div class="bar-row"><span class="lbl">'+esc(k.replace("_"," "))+'</span><span class="track"><span class="fill" style="width:'+Math.round(100*v/maxT)+'%"></span></span><span class="num">'+v+'</span></div>';
+    }).join("")||'<p style="color:var(--mut);font-size:.72rem">No materials yet.</p>';
+    var maxD=Math.max.apply(null,(s.days||[]).map(function(d){return d.count;}).concat([1]));
+    var spark=(s.days||[]).map(function(d){
+      return '<div class="col" title="'+d.date+': '+d.count+'"><div class="b" style="height:'+Math.max(4,Math.round(52*d.count/maxD))+'px"></div><span class="d">'+d.date+'</span></div>';
+    }).join("");
+    var currs=(s.by_curr||[]).map(function(c){return '<span class="wb">'+esc(c[0])+' · '+c[1]+'</span>';}).join("")||'<span style="color:var(--mut);font-size:.72rem">—</span>';
+    var langs=Object.keys(s.by_lang||{}).map(function(k){return '<span class="wb">'+(k==="sw"?"Kiswahili":"English")+' · '+s.by_lang[k]+'</span>';}).join("")||'<span style="color:var(--mut);font-size:.72rem">—</span>';
+    var tops=(s.top_topics||[]).map(function(t){return '<span class="wb">'+esc(t[0])+' · '+t[1]+'</span>';}).join("")||'<span style="color:var(--mut);font-size:.72rem">—</span>';
+    strip.innerHTML=
+      '<div class="flex items-center justify-between mb-3"><h3 style="font-family:Manrope;font-weight:800;color:var(--indigo);font-size:.95rem;display:flex;align-items:center;gap:.45rem"><i data-lucide="layout-dashboard"></i> Studio analytics</h3><button id="dashRefresh" class="aa-btn" style="padding:.35rem .6rem"><i data-lucide="refresh-cw"></i></button></div>'+
+      '<div class="grid grid-cols-2 md:grid-cols-5 gap-3">'+kpis+'</div>'+
+      '<div class="grid md:grid-cols-3 gap-5 mt-4">'+
+        '<div><p class="dash-h">By artifact type</p>'+bars+'</div>'+
+        '<div><p class="dash-h">Last 7 days</p><div class="spark">'+spark+'</div></div>'+
+        '<div><p class="dash-h">Curriculum mix</p><div>'+currs+'</div><p class="dash-h" style="margin-top:.6rem">Language</p><div>'+langs+'</div><p class="dash-h" style="margin-top:.6rem">Top topics</p><div>'+tops+'</div></div>'+
+      '</div>';
+    var rb=document.getElementById("dashRefresh");if(rb)rb.onclick=load;
+    if(window.lucide)lucide.createIcons();
+  }
+  function load(){
+    fetch("/api/teacher/artifacts/stats/",{credentials:"same-origin"}).then(function(r){return r.json();}).then(render).catch(function(){});
+  }
+  function mount(){
+    if(document.getElementById("dashStrip"))return;
+    var err=document.getElementById("err");if(!err)return;
+    var strip=document.createElement("div");
+    strip.id="dashStrip";strip.className="jf-card no-print";
+    strip.style.cssText="padding:1rem 1.2rem;margin-bottom:1.2rem";
+    err.parentNode.insertBefore(strip,err);
+    load();
+    setInterval(load,30000);
+    document.getElementById("genform").addEventListener("submit",function(){setTimeout(load,2500);});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mount);else mount();
+})();
+</script>
+
+
+<script>
+(function(){
+  window.TYPE_LABEL = window.TYPE_LABEL || {};
+  window.TYPE_LABEL.scheme_of_work = "Scheme of work";
+  window.TYPE_LABEL.revision_notes = "Revision notes";
+  var add = {en:{weeks:"Teaching weeks",coverage:"Coverage",key_terms:"Key terms",summary:"Summary",key_points:"Key points",worked:"Worked example",examq:"Exam practice",mnemonic:"Memory aid",checklist:"Revision checklist",lessons:"lessons"},
+             sw:{weeks:"Wiki za mafundisho",coverage:"Funiko",key_terms:"Istilahi muhimu",summary:"Muhtasari",key_points:"Vipengele muhimu",worked:"Mfano uliofanywa",examq:"Mazoezi ya mtihani",mnemonic:"Kikumbusho",checklist:"Orodha ya marejeo",lessons:"masomo"}};
+  for (var k in add.en){ window.I18N.en[k]=add.en[k]; window.I18N.sw[k]=add.sw[k]; }
+  function hdr(d,b,L,sub){return header(d,b,L,sub);}
+  function renderScheme(d,b,L){
+    var wk=(d.weeks||[]).map(function(w){
+      return '<div class="qcard"><div class="flex flex-wrap justify-between items-center gap-2 mb-2"><span class="chip" style="background:var(--indigo);color:#fff">Week '+w.week+'</span><span class="chip">'+w.lessons+' '+L.lessons+'</span></div>'
+        +'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+esc(w.subtopic)+'</h3>'
+        +'<p class="text-xs font-bold mb-1" style="color:var(--mut)">'+L.out+'</p><ul style="margin:0 0 .5rem 1.1rem;font-size:.85rem">'+w.objectives.map(function(o){return '<li>'+esc(o)+'</li>';}).join("")+'</ul>'
+        +'<p class="text-xs font-bold mb-1" style="color:var(--mut)">'+L.flow+'</p><ul style="margin:0 0 .5rem 1.1rem;font-size:.85rem">'+w.activities.map(function(a){return '<li>'+esc(a)+'</li>';}).join("")+'</ul>'
+        +'<p class="text-xs" style="color:var(--mut)"><b>'+L.ass+':</b> '+esc(w.assessment)+'</p></div>';
+    }).join("");
+    return hdr(d,b,L,"Scheme of Work")+'<div class="stat mb-4" style="display:inline-block"><p>'+L.coverage+'</p><p style="font-size:.85rem">'+esc(d.coverage)+'</p></div><div class="grid md:grid-cols-2 gap-4">'+wk+'</div>'
+      +'<div style="background:#FFFBEB;border-left:4px solid var(--amber);padding:1rem;margin-top:1rem"><strong style="color:#92400E">'+L.notes+':</strong> <span style="color:#92400E">'+esc(d.notes)+'</span></div>';
+  }
+  function renderRevision(d,b,L){
+    var kt=(d.key_terms||[]).map(function(t){return '<span class="wb">'+esc(t)+'</span>';}).join("");
+    var kp=(d.key_points||[]).map(function(p,i){return '<div class="oc"><b>'+(i+1)+'</b><span>'+esc(p)+'</span></div>';}).join("");
+    var eq=(d.exam_questions||[]).map(function(q,i){return '<div class="qcard"><p class="font-medium">'+esc(q.q)+'</p><div class="answer"><strong>'+L.ans+':</strong> '+esc(q.a)+'</div></div>';}).join("");
+    var ck=(d.checklist||[]).map(function(c){return '<div class="check"><span>'+esc(c)+'</span></div>';}).join("");
+    return hdr(d,b,L,"Revision Notes")+'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.key_terms+'</h3><div class="mb-4">'+kt+'</div>'
+      +'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.summary+'</h3><p style="color:var(--mut);font-size:.9rem" class="mb-5">'+esc(d.summary)+'</p>'
+      +'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.key_points+'</h3><div class="space-y-2 mb-6">'+kp+'</div>'
+      +'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.worked+'</h3><div style="background:#EEF6FF;border:1px dashed #2563EB;border-radius:.6rem;padding:.8rem 1rem;font-size:.9rem;color:#1E40AF" class="mb-6">'+esc(d.worked_example)+'</div>'
+      +'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.examq+'</h3>'+eq
+      +'<div style="background:#EEF2FF;border-left:4px solid var(--indigo);padding:.9rem 1rem;margin:1rem 0"><strong style="color:var(--indigo)">'+L.mnemonic+':</strong> <span style="letter-spacing:.2em;font-weight:800">'+esc(d.mnemonic)+'</span></div>'
+      +'<h3 class="font-bold mb-2" style="color:var(--indigo)">'+L.checklist+'</h3>'+ck;
+  }
+  var orig = window.renderAny;
+  window.renderAny = function(d,b){
+    if (d && d.kind === "scheme_of_work") return renderScheme(d,b,window.I18N[d.language==="sw"?"sw":"en"]);
+    if (d && d.kind === "revision_notes") return renderRevision(d,b,window.I18N[d.language==="sw"?"sw":"en"]);
+    return orig(d,b);
+  };
+})();
 </script>
 {% endblock %}

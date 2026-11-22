@@ -102,3 +102,6 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
+
+# JF_LAN_HOST - allow phones on the local network during development
+ALLOWED_HOSTS = list(ALLOWED_HOSTS) + ["192.168.23.120"]

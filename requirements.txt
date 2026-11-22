@@ -1,10 +1,11 @@
-﻿Django>=5.2,<5.3
+Django>=5.2,<5.3
 djangorestframework
 psycopg[binary]
 python-dotenv
 Pillow
 django-cors-headers
+PyMuPDF
+python-docx
+gunicorn
 pytest
 pytest-django
-python-dotenv
-requests

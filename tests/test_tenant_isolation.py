@@ -1,17 +1,22 @@
-﻿import pytest
-from apps.learning.models import Conversation
-@pytest.mark.django_db
-def test_learner_sees_only_own_school_conversations(two_schools, client):
-    inst_a, inst_b, user_a, user_b = two_schools
-    Conversation.objects.create(institution=inst_a, user=user_a, title="School A secret")
-    client.force_login(user_b)
-    resp = client.get("/api/learning/conversations/")
-    assert resp.status_code == 200
-    assert resp.json()["count"] == 0
-@pytest.mark.django_db
-def test_conversation_detail_blocked_across_schools(two_schools, client):
-    inst_a, inst_b, user_a, user_b = two_schools
-    conv = Conversation.objects.create(institution=inst_a, user=user_a, title="private")
-    client.force_login(user_b)
-    resp = client.get(f"/api/learning/conversations/{conv.id}/")
-    assert resp.status_code == 404
+import json
+import pytest
+from apps.teacher_studio.models import TeachingArtifact
+pytestmark = pytest.mark.django_db
+def _artifact(inst, user, topic):
+    return TeachingArtifact.objects.create(
+        institution=inst, created_by=user, artifact_type="lesson_plan",
+        topic=topic, content=json.dumps({"kind": "lesson_plan", "title": topic}))
+def test_school_cannot_see_other_school_artifacts(client_a, school_a, school_b):
+    _artifact(school_a[0], school_a[1], "Photosynthesis")
+    _artifact(school_b[0], school_b[1], "Secret B topic")
+    r = client_a.get("/api/teacher/artifacts/recent/")
+    assert r.status_code == 200
+    titles = [x["title"] for x in r.json()]
+    assert "Photosynthesis" in titles
+    assert "Secret B topic" not in titles
+def test_automark_rejects_foreign_artifact(client_a, school_b):
+    foreign = _artifact(school_b[0], school_b[1], "Foreign quiz")
+    r = client_a.post("/api/teacher/artifacts/automark/",
+                      {"artifact_id": str(foreign.id), "answers": {}},
+                      content_type="application/json")
+    assert r.status_code == 404

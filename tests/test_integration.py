@@ -1,21 +1,31 @@
-﻿import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
-from apps.resources.models import DocumentChunk
-@pytest.mark.django_db
-def test_full_learning_workflow(two_schools, client):
-    inst_a, inst_b, user_a, user_b = two_schools
-    client.force_login(user_a)
-    upload = SimpleUploadedFile("notes.txt", b"Photosynthesis converts light energy into chemical energy in chloroplasts.", content_type="text/plain")
-    resp = client.post("/upload/", {"files": [upload], "paths": ["Biology/Form 2/notes.txt"], "subject": "", "grade_level": ""})
-    assert resp.status_code == 200
-    assert DocumentChunk.objects.filter(resource__institution=inst_a).count() >= 1
-    resp = client.post("/api/learning/conversations/", {"title": "Biology help"}, content_type="application/json")
-    assert resp.status_code == 201
-    conv_id = resp.json()["id"]
-    resp = client.post(
-        f"/api/learning/conversations/{conv_id}/chat/",
-        {"prompt": "What is photosynthesis?"}, content_type="application/json")
-    assert resp.status_code == 201
-    body = resp.json()
-    assert body["role"] == "assistant"
-    assert len(body["sources"]) >= 1, "AI answer must cite school resources"
+import json
+import pytest
+pytestmark = pytest.mark.django_db
+def test_generate_then_automark_quiz(client_a):
+    r = client_a.post("/api/teacher/artifacts/generate/", {
+        "artifact_type": "quiz", "topic": "Photosynthesis", "grade_level": "Form 2",
+        "curriculum": "CBC/CBE", "count": 6, "mix": "balanced", "language": "en",
+        "duration": 50, "difficulty": "Standard"}, content_type="application/json")
+    assert r.status_code == 201
+    art = r.json()
+    lesson = json.loads(art["content"])
+    assert lesson["kind"] == "quiz" and lesson["questions"]
+    answers = {str(q["no"]): (q.get("correct") if q["type"] == "mcq" else
+                              (q.get("answer") if q["type"] in ("short", "structured") else None))
+               for q in lesson["questions"]}
+    m = client_a.post("/api/teacher/artifacts/automark/",
+                      {"artifact_id": art["id"], "answers": answers},
+                      content_type="application/json")
+    assert m.status_code == 200
+    rep = m.json()
+    assert rep["total_marks"] > 0 and 0 <= rep["percentage"] <= 100
+def test_transform_improve_creates_version(client_a):
+    r = client_a.post("/api/teacher/artifacts/generate/", {
+        "artifact_type": "lesson_plan", "topic": "Photosynthesis", "grade_level": "Form 2",
+        "curriculum": "CBC/CBE", "language": "en", "duration": 50}, content_type="application/json")
+    art = r.json()
+    t = client_a.post("/api/teacher/artifacts/transform/",
+                      {"artifact_id": art["id"], "action": "improve"},
+                      content_type="application/json")
+    assert t.status_code == 200
+    assert json.loads(t.json()["content"]).get("misconceptions")

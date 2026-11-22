@@ -1,0 +1,18 @@
+{
+  "CBC/Grade 8/Biology/Photosynthesis/photosynthesis_notes.txt": {
+    "tier": "A",
+    "license": "CC0 (original sample)",
+    "attribution": "JIFUNZE AI"
+  },
+  "knec-2024-biology-paper1": {
+    "tier": "B",
+    "title": "KCSE 2024 Biology Paper 1 (KNEC)",
+    "curriculum": "8-4-4",
+    "grade": "Form 4",
+    "subject": "Biology",
+    "topic": "Exams",
+    "source_url": "https://www.knec.ac.ke/downloads/",
+    "license": "KNEC (link-out, all rights reserved)",
+    "attribution": "Kenya National Examinations Council"
+  }
+}

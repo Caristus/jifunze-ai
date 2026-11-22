@@ -1,36 +1,98 @@
-﻿{% extends "base.html" %}
-{% block title %}My Library — JIFUNZE AI{% endblock %}
+{% extends "base.html" %}
+{% block title %}My Library — JIFUNZE AI<script>
+(function(){
+  var f = document.querySelector("#libGrid") ? document.querySelector("form") : null;
+  if (!f) return;
+  f.addEventListener("submit", function(e){
+    var mode = document.getElementById("searchMode");
+    if (!mode || mode.value !== "semantic") return;
+    e.preventDefault();
+    var q = document.getElementById("libq").value.trim();
+    if (!q) return;
+    fetch("/api/resources/semantic_search/?q=" + encodeURIComponent(q), {credentials:"same-origin"})
+      .then(function(r){return r.json();}).then(function(j){
+        var grid = document.getElementById("libGrid");
+        grid.innerHTML = (j.results||[]).map(function(x){
+          return '<div class="lb-card p-5"><div class="flex items-start justify-between gap-2 mb-2"><h3 class="font-bold" style="color:var(--indigo)">'+x.title+'</h3><span class="badge bA">'+x.score+'</span></div>'
+            + '<div class="flex flex-wrap gap-1.5 mb-2">'+(x.subject?'<span class="chip">'+x.subject+'</span>':'')+(x.grade?'<span class="chip">'+x.grade+'</span>':'')+'</div>'
+            + '<p style="font-size:.8rem;color:var(--mut)">'+x.chunk+'…</p></div>';
+        }).join("") || '<p style="color:var(--mut)">No semantic matches. Run <code>python manage.py build_embeddings</code> first.</p>';
+      });
+  });
+})();
+</script>
+{% endblock %}
 {% block content %}
-<div class="flex items-center justify-between mb-6 flex-wrap gap-2">
-  <div>
-    <h1 class="text-2xl font-bold text-slate-900">My Learning Resources</h1>
-    <p class="text-sm text-slate-500">{% if institution %}{{ institution.name }}{% endif %} — everything your school has indexed for grounded AI answers.</p>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--indigo:#1B1F4B;--green:#10B981;--amber:#F59E0B;--bg:#FDFCF8;--card:#fff;--ink:#0F172A;--mut:#64748B;--line:#E4E1D6;--soft:#F6F4EC;}
+  .lb{font-family:Inter,sans-serif;color:var(--ink);}
+  .lb h1,.lb h2,.lb h3{font-family:Manrope,sans-serif;}
+  .lb-card{background:var(--card);border:1px solid var(--line);border-radius:1rem;box-shadow:0 6px 18px -8px rgba(27,31,75,.14);}
+  .lb input,.lb select{border:1px solid var(--line);border-radius:.6rem;padding:.55rem .7rem;background:#fff;font-size:.875rem;}
+  .lb input:focus,.lb select:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(27,31,75,.14);}
+  .badge{font-size:.65rem;font-weight:800;letter-spacing:.05em;padding:.2rem .55rem;border-radius:9999px;}
+  .bA{background:#DCFCE7;color:#166534;} .bB{background:#FEF3C7;color:#92400E;} .bC{background:#E2E8F0;color:#334155;}
+  .chip{font-size:.68rem;font-weight:700;padding:.18rem .5rem;border-radius:9999px;background:#EEF0F6;color:#3B4270;}
+  .lb-btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:600;border-radius:.55rem;padding:.45rem .8rem;border:1px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;transition:.15s;}
+  .lb-btn:hover{background:var(--soft);}
+  .lb-btn.primary{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+  .lb-btn.primary:hover{background:#2A3070;}
+</style>
+<div class="lb max-w-7xl mx-auto px-4 py-8">
+  <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-3xl font-extrabold" style="color:var(--indigo)">My Library</h1>
+      <p class="mt-1" style="color:var(--mut)">School-owned resources with provenance, licence and attribution{% if institution %} · {{ institution.name }}{% endif %}</p>
+    </div>
+    <div class="flex gap-2">
+      <span class="badge bA">Ingested {{ counts.A }}</span>
+      <span class="badge bB">Link-out {{ counts.B }}</span>
+      <span class="badge bC">Private {{ counts.C }}</span>
+    </div>
   </div>
-  <a href="/upload/" class="bg-teal-600 hover:bg-teal-500 text-white rounded px-4 py-2 text-sm">+ Upload</a>
-</div>
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-  {% for r in resources %}
-    <div class="bg-white rounded-lg shadow p-5 flex flex-col">
-      <div class="flex items-start justify-between gap-2">
-        <h2 class="font-semibold text-slate-900 leading-tight">{{ r.title }}</h2>
-        <span class="text-xs px-2 py-1 rounded
-          {% if r.status == 'ready' %}bg-green-100 text-green-700
-          {% elif r.status == 'processing' %}bg-amber-100 text-amber-700
-          {% elif r.status == 'failed' %}bg-red-100 text-red-700
-          {% else %}bg-slate-100 text-slate-600{% endif %}">{{ r.get_status_display }}</span>
-      </div>
-      <p class="text-xs text-slate-500 mt-1">{{ r.get_status_display }} · {{ r.chunks.count }} chunks</p>
-      <div class="mt-3 text-sm space-y-1">
-        {% if r.topic %}<p><span class="text-slate-400">Topic:</span> {{ r.topic }}</p>{% endif %}
-        {% if r.subject %}<p><span class="text-slate-400">Subject:</span> {{ r.subject }}</p>{% endif %}
-        {% if r.grade_level %}<p><span class="text-slate-400">Grade:</span> {{ r.grade_level }}</p>{% endif %}
-      </div>
-      <p class="text-xs text-slate-400 mt-auto pt-3">Uploaded {{ r.created_at|date:"M d, Y" }} by {{ r.uploaded_by.username }}</p>
+  <form method="get" class="lb-card p-4 mb-6 grid md:grid-cols-6 gap-3">
+    <div class="md:col-span-2 flex gap-2"><input name="q" id="libq" value="{{ q }}" placeholder="Search title, topic, subject" class="flex-1"><select id="searchMode" style="max-width:130px"><option value="keyword">Keyword</option><option value="semantic">Semantic</option></select></div>
+    <select name="curriculum"><option value="">All curricula</option>{% for c in curricula %}<option {% if sel.curriculum == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+    <select name="grade"><option value="">All grades</option>{% for g in grades %}<option {% if sel.grade == g %}selected{% endif %}>{{ g }}</option>{% endfor %}</select>
+    <select name="subject"><option value="">All subjects</option>{% for s in subjects %}<option {% if sel.subject == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+    <div class="flex gap-2">
+      <select name="tier" class="flex-1"><option value="">All tiers</option><option value="A" {% if sel.tier == "A" %}selected{% endif %}>A · Ingested</option><option value="B" {% if sel.tier == "B" %}selected{% endif %}>B · Link-out</option><option value="C" {% if sel.tier == "C" %}selected{% endif %}>C · Private</option></select>
+      <button class="lb-btn primary" type="submit">Filter</button>
     </div>
-  {% empty %}
-    <div class="col-span-full bg-white rounded-lg shadow p-10 text-center text-slate-500">
-      No resources yet. <a href="/upload/" class="text-teal-600 underline">Upload your first folder</a> to power grounded answers.
+  </form>
+  {% if rows %}
+  <div id="libGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+    {% for r in rows %}
+    <div class="lb-card p-5 flex flex-col">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <h3 class="font-bold text-base leading-snug" style="color:var(--indigo)">{{ r.title }}</h3>
+        <span class="badge b{{ r.tier }}">{% if r.tier == "A" %}INGESTED{% elif r.tier == "B" %}LINK-OUT{% else %}PRIVATE{% endif %}</span>
+      </div>
+      <div class="flex flex-wrap gap-1.5 mb-3">
+        {% if r.curriculum %}<span class="chip">{{ r.curriculum }}</span>{% endif %}
+        {% if r.grade %}<span class="chip">{{ r.grade }}</span>{% endif %}
+        {% if r.subject %}<span class="chip">{{ r.subject }}</span>{% endif %}
+        {% if r.topic %}<span class="chip">{{ r.topic }}</span>{% endif %}
+      </div>
+      <p class="text-xs mb-1" style="color:var(--mut)"><strong>Chunks indexed:</strong> {{ r.chunks }}</p>
+      {% if r.license %}<p class="text-xs mb-1" style="color:var(--mut)"><strong>Licence:</strong> {{ r.license }}</p>{% endif %}
+      {% if r.attribution %}<p class="text-xs mb-3" style="color:var(--mut)"><strong>Attribution:</strong> {{ r.attribution }}</p>{% endif %}
+      <div class="mt-auto flex flex-wrap gap-2 pt-2">
+        {% if r.tier == "B" and r.source_url %}
+          <a class="lb-btn primary" href="{{ r.source_url }}" target="_blank" rel="noopener">Open official source</a>
+        {% elif r.file_url %}
+          <a class="lb-btn" href="{{ r.file_url }}" target="_blank" rel="noopener">Open file</a>
+        {% endif %}
+        {% if r.tier == "C" %}<span class="text-xs self-center" style="color:var(--mut)">Reference only — not in learner search</span>{% endif %}
+      </div>
     </div>
-  {% endfor %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lb-card p-16 text-center" style="border:2px dashed var(--line);color:var(--mut)">
+    No resources match. Import a pack or upload materials to populate your library.
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

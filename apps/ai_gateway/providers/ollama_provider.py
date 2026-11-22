@@ -1,32 +1,26 @@
-﻿from .base import BaseProvider
-import requests
-import logging
-logger = logging.getLogger(__name__)
+import json
+import os
+import urllib.request
+import urllib.error
+from .base import BaseProvider
 class OllamaProvider(BaseProvider):
-    """Ollama local inference provider for offline-capable schools."""
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "llama3.2"):
-        self.base_url = base_url.rstrip("/")
-        self.model = model
-    @property
-    def provider_name(self) -> str:
-        return "ollama"
-    def generate(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
-        logger.info(f"Ollama provider calling {self.model} for: {prompt[:50]}...")
-        messages = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": prompt})
+    provider_name = "ollama"
+    def __init__(self, model=None, base_url=None):
+        self.model = model or os.environ.get("OLLAMA_MODEL", "llama3")
+        self.base_url = (base_url or os.environ.get("OLLAMA_URL", "http://localhost:11434")).rstrip("/")
+    def generate(self, prompt, system_prompt=None, **kwargs):
+        url = self.base_url + "/api/generate"
+        body = json.dumps({
+            "model": self.model,
+            "prompt": (system_prompt + "\n\n" if system_prompt else "") + prompt,
+            "stream": False,
+        }).encode()
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
         try:
-            response = requests.post(
-                f"{self.base_url}/api/chat",
-                json={"model": self.model, "messages": messages, "stream": False},
-                timeout=60
-            )
-            response.raise_for_status()
-            return response.json()["message"]["content"]
-        except requests.exceptions.ConnectionError:
-            logger.error(f"Cannot connect to Ollama at {self.base_url}.")
-            return "[Ollama is not available. Please start Ollama with: ollama serve]"
+            with urllib.request.urlopen(req, timeout=120) as r:
+                data = json.loads(r.read().decode())
+            return data.get("response", "")
+        except urllib.error.URLError as e:
+            raise ValueError("Ollama connection failed: %s" % str(e)) from e
         except Exception as e:
-            logger.error(f"Ollama error: {e}")
-            return f"[Ollama error: {str(e)}]"
+            raise ValueError("Ollama error: %s" % str(e)) from e

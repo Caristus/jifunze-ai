@@ -1,4 +1,7 @@
-﻿from django.contrib import admin
+from apps.learning import progress_views
+from apps.resources import semantic_views
+from apps.resources import library_views
+from django.contrib import admin
 from django.urls import path, include
 from apps.institutions import views as institutions_views
 from django.conf import settings
@@ -28,7 +31,9 @@ urlpatterns = [
     path("ai-config/", ai_gateway_views.ai_config, name="ai_config"),
     path("onboard/", institutions_views.bulk_onboard, name="bulk_onboard"),
     path("upload/", resources_views.upload_resource, name="upload"),
-    path("library/", resources_views.resource_library, name="library"),
+    path("library/", library_views.library_page, name="library"),
+    path("api/learn/progress/", progress_views.progress),
+    path("api/resources/semantic_search/", semantic_views.search),
     path("offline/", lambda request: __import__("django.shortcuts").shortcuts.render(request, "offline.html"), name="offline"),
 ]
 if settings.DEBUG:
