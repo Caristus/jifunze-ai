@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Bulk Onboard — JIFUNZE AI{% endblock %}
+{% block content %}
+<style>
+  .ob{font-family:Inter,sans-serif;color:#0F172A;}
+  .ob-card{background:#fff;border:1px solid #E4E1D6;border-radius:1rem;box-shadow:0 6px 18px -8px rgba(27,31,75,.14);padding:1.4rem;}
+  .ob textarea{width:100%;min-height:160px;border:1px solid #E4E1D6;border-radius:.7rem;padding:.8rem;font-family:monospace;font-size:.85rem;}
+  .ob table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:1rem;}
+  .ob th,.ob td{border:1px solid #E4E1D6;padding:.5rem .6rem;text-align:left;}
+  .ob th{background:#1B1F4B;color:#fff;}
+  .ob-btn{background:#1B1F4B;color:#fff;border:none;border-radius:.7rem;padding:.7rem 1.2rem;font-weight:700;cursor:pointer;}
+  .ob-btn.ghost{background:#fff;color:#1B1F4B;border:1px solid #E4E1D6;}
+</style>
+<div class="ob max-w-5xl mx-auto px-4 py-8">
+  <h1 style="font-family:Manrope;font-weight:800;color:#1B1F4B;font-size:1.8rem" class="mb-2">Bulk Onboard</h1>
+  <p style="color:#64748B" class="mb-6">Paste CSV lines or upload a file: <code>username, role, grade</code> — one per line.</p>
+  <div class="ob-card">
+    <form method="post" action="/onboard/run/" enctype="multipart/form-data">
+      {% csrf_token %}
+      <textarea name="csv" placeholder="alice.kamau,learner,Grade 8
+brian.otieno,teacher,
+mary.wanjiku,learner,Form 2"></textarea>
+      <input type="file" name="file" accept=".csv,.txt" style="margin-top:.8rem">
+      <div style="display:flex;gap:.6rem;margin-top:1rem">
+        <button class="ob-btn" type="submit">Create users</button>
+        {% if results %}<a class="ob-btn ghost" href="/onboard/csv/" style="text-decoration:none;display:inline-flex;align-items:center">Download credentials CSV</a>{% endif %}
+      </div>
+    </form>
+    {% if results %}
+    <table><tr><th>Username</th><th>Role</th><th>Grade</th><th>Temporary password</th><th>Status</th></tr>
+      {% for r in results %}<tr><td>{{ r.username }}</td><td>{{ r.role }}</td><td>{{ r.grade }}</td><td><code>{{ r.password }}</code></td><td>{% if r.created %}created{% else %}existing{% endif %}</td></tr>{% endfor %}
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

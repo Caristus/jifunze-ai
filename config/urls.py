@@ -1,3 +1,7 @@
+from apps.dashboard import analytics_views, api_docs_views
+from apps.accounts import extra_views
+from apps.accounts import bulk_views
+from apps.governance import centre_views
 from apps.learning import ask_views
 from apps.learning import progress_views
 from apps.resources import semantic_views
@@ -38,6 +42,24 @@ urlpatterns = [
     path("api/learn/ask/", ask_views.ask),
     path("api/learn/has_sources/", ask_views.has_sources),
     path("api/learn/history/", ask_views.history),
+    path("onboard/", bulk_views.onboard_page),
+    path("onboard/run/", bulk_views.onboard_run),
+    path("onboard/csv/", bulk_views.onboard_csv),
+    path("sovereignty/", centre_views.centre_page),
+    path("sovereignty/action/", centre_views.centre_action),
+    path("sovereignty/export/", centre_views.centre_export),
+    path("approvals/", extra_views.approvals_page),
+    path("approvals/action/", extra_views.approval_action),
+    path("approvals/require/", extra_views.require_approval_toggle),
+    path("community/", extra_views.community_page),
+    path("share/toggle/", extra_views.share_toggle),
+    path("bookmark/toggle/", extra_views.bookmark_toggle),
+    path("parent/", extra_views.parent_page),
+    path("accounts/2fa/", extra_views.twofa_page),
+    path("accounts/verify/send/", extra_views.verify_send),
+    path("accounts/verify/<str:token>/", extra_views.verify_confirm),
+    path("analytics/", analytics_views.analytics_page),
+    path("api/docs/", api_docs_views.api_docs_page),
     path("offline/", lambda request: __import__("django.shortcuts").shortcuts.render(request, "offline.html"), name="offline"),
 ]
 if settings.DEBUG:

@@ -7,6 +7,7 @@ class Institution(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     retention_days = models.IntegerField(default=365, help_text="Days to retain audit and conversation data")
+    require_approval = models.BooleanField(default=False, help_text="New teacher/learner uploads require admin approval")
     slug = models.SlugField(unique=True, blank=True)
     country = models.CharField(max_length=100, default="Kenya")
     institution_type = models.CharField(

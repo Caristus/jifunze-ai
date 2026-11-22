@@ -8,6 +8,11 @@ def library_page(request):
     m = Membership.objects.filter(user=request.user, is_active=True).first()
     fields = {f.name for f in LearningResource._meta.fields}
     base_qs = LearningResource.objects.filter(institution=m.institution) if m else LearningResource.objects.none()
+    role = getattr(request.user, "role", "")
+    if "approval_status" in fields and role in ("learner", "parent"):
+        base_qs = base_qs.filter(approval_status="approved")
+    if request.GET.get("bookmarks") and m:
+        base_qs = base_qs.filter(bookmarks__user=request.user).distinct()
     qs = base_qs
     q = request.GET.get("q", "").strip()
     cur = request.GET.get("curriculum", "").strip()
@@ -39,6 +44,7 @@ def library_page(request):
         except Exception:
             file_url = ""
         rows.append({
+            "id": str(r.id),
             "title": r.title,
             "subject": getattr(r, "subject", ""),
             "grade": getattr(r, "grade_level", ""),
@@ -59,7 +65,7 @@ def library_page(request):
     for row in rows:
         counts[row["tier"]] = counts.get(row["tier"], 0) + 1
     return render(request, "resources/library.html", {
-        "rows": rows, "q": q, "counts": counts,
+        "rows": rows, "bookmarked": request.GET.get("bookmarks", ""), "q": q, "counts": counts,
         "curricula": distinct("curriculum"), "grades": distinct("grade_level"), "subjects": distinct("subject"),
         "sel": {"curriculum": cur, "grade": grade, "subject": subj, "tier": tier},
         "institution": m.institution if m else None,

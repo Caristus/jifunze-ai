@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}Resource Approvals{% endblock %}{% block content %}
+<style>.ap{font-family:Inter,sans-serif}.ap-card{background:#fff;border:1px solid #E4E1D6;border-radius:1rem;padding:1.2rem;margin-bottom:1rem}.ap table{width:100%;border-collapse:collapse;font-size:.8rem}.ap th,.ap td{border:1px solid #E4E1D6;padding:.5rem;text-align:left}.ap th{background:#1B1F4B;color:#fff}.ap-btn{border:none;border-radius:.5rem;padding:.4rem .8rem;font-weight:700;cursor:pointer;font-size:.75rem}.ap-ok{background:#0E9F6E;color:#fff}.ap-no{background:#B91C1C;color:#fff}</style>
+<div class="ap max-w-6xl mx-auto px-4 py-8">
+<h1 style="font-family:Manrope;font-weight:800;color:#1B1F4B">Resource Approvals</h1>
+<p style="color:#64748B" class="mb-4">Learners only see <b>approved</b> resources. Toggle whether new uploads require review.</p>
+<div class="ap-card"><label style="display:flex;gap:.5rem;align-items:center;font-size:.85rem"><input type="checkbox" id="reqAp" {% if require %}checked{% endif %}> Require admin approval for new teacher/learner uploads</label></div>
+<div class="ap-card"><h3 style="font-family:Manrope;color:#1B1F4B" class="mb-2">Pending</h3>
+{% if pending %}<table><tr><th>Title</th><th>Subject</th><th>Uploaded by</th><th>Actions</th></tr>{% for r in pending %}<tr><td>{{ r.title }}</td><td>{{ r.subject }}</td><td>{{ r.uploaded_by }}</td><td><button class="ap-btn ap-ok" data-id="{{ r.id }}" data-s="approved">Approve</button> <button class="ap-btn ap-no" data-id="{{ r.id }}" data-s="rejected">Reject</button></td></tr>{% endfor %}</table>
+{% else %}<p style="color:#64748B;font-size:.85rem">Nothing pending.</p>{% endif %}</div>
+<div class="ap-card"><h3 style="font-family:Manrope;color:#1B1F4B" class="mb-2">Recent decisions</h3>
+<table><tr><th>Title</th><th>Status</th></tr>{% for r in recent %}<tr><td>{{ r.title }}</td><td>{{ r.approval_status }}</td></tr>{% endfor %}</table></div>
+</div>
+<script>function csrf(){return (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||"";}
+document.getElementById("reqAp").onchange=function(){fetch("/approvals/require/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":csrf(),"Content-Type":"application/json"},body:JSON.stringify({on:this.checked})});};
+document.querySelectorAll(".ap-btn").forEach(function(b){b.onclick=function(){fetch("/approvals/action/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":csrf(),"Content-Type":"application/json"},body:JSON.stringify({id:b.dataset.id,status:b.dataset.s})}).then(function(){location.reload();});};});
+</script>{% endblock %}

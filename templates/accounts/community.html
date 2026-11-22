@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block title %}Community Library{% endblock %}{% block content %}
+<style>.cm{font-family:Inter,sans-serif}.cm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}.cm-card{background:#fff;border:1px solid #E4E1D6;border-radius:1rem;padding:1rem}.chip{display:inline-block;font-size:.66rem;font-weight:700;padding:.18rem .55rem;border-radius:9999px;background:#EEF0F6;color:#3B4270}</style>
+<div class="cm max-w-7xl mx-auto px-4 py-8">
+<h1 style="font-family:Manrope;font-weight:800;color:#1B1F4B" class="mb-1">Community Library</h1>
+<p style="color:#64748B" class="mb-5">Openly-shared, approved resources from participating schools — read-only, each retains its own licence.</p>
+<div class="cm-grid">{% for r in rows %}<div class="cm-card"><h3 style="font-family:Manrope;color:#1B1F4B;font-size:.95rem">{{ r.title }}</h3>
+<div style="margin:.4rem 0"><span class="chip">{{ r.institution.name }}</span> <span class="chip">{{ r.subject }}</span> <span class="chip">{{ r.curriculum }}</span></div>
+<p style="font-size:.75rem;color:#64748B">Licence: {{ r.license|default:"—" }}</p></div>{% empty %}<p style="color:#64748B">No shared resources yet. Use the 🌐 share toggle in My Library to contribute.</p>{% endfor %}</div>
+</div>{% endblock %}

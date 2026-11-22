@@ -11,12 +11,15 @@ def fields(model):
     return {f.name for f in model._meta.fields}
 def _tokens(text):
     return [t for t in "".join(ch if ch.isalnum() else " " for ch in (text or "").lower()).split() if len(t) > 2]
-def _retrieve(institution, question, k=3, subject=""):
+def _retrieve(institution, question, k=3, subject="", approved_only=False):
     qt = _tokens(question)
     if not qt:
         return []
     scored = []
-    for c in DocumentChunk.objects.filter(resource__institution=institution).select_related("resource")[:400]:
+    qs = DocumentChunk.objects.filter(resource__institution=institution).select_related("resource")
+    if approved_only:
+        qs = qs.filter(resource__approval_status="approved")
+    for c in qs[:400]:
         ct = set(_tokens(c.chunk_text))
         hit = len([t for t in qt if t in ct])
         if hit:
@@ -106,7 +109,7 @@ def ask(request):
     if "role" in mf:
         mkwargs["role"] = "user"
     Message.objects.create(**mkwargs)
-    chunks = _retrieve(m.institution, q, 3, subject)
+    chunks = _retrieve(m.institution, q, 3, subject, approved_only=(request.user.role in ("learner", "parent")))
     web = None
     if chunks:
         ctx = "\n".join((c.chunk_text or "")[:700] for c in chunks)

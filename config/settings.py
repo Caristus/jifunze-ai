@@ -31,6 +31,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.middleware.TwoFactorMiddleware",
+    "apps.accounts.middleware.RateLimitMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -105,3 +107,9 @@ REST_FRAMEWORK = {
 
 # JF_LAN_HOST - allow phones on the local network during development
 ALLOWED_HOSTS = list(ALLOWED_HOSTS) + ["192.168.23.120"]
+
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = "no-reply@jifunze.ai"
+
+# JF_TEST_HOST - allow the Django test Client in standalone verification scripts
+ALLOWED_HOSTS = list(ALLOWED_HOSTS) + ["testserver"]

@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Parent Portal{% endblock %}{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8" style="font-family:Inter,sans-serif">
+<h1 style="font-family:Manrope;font-weight:800;color:#1B1F4B" class="mb-1">Parent / Guardian Portal</h1>
+{% if ward %}
+<p style="color:#64748B" class="mb-5">Progress for <b>{{ ward.get_full_name|default:ward.username }}</b> — read-only, privacy-respecting (no message content shown).</p>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem" class="mb-5">
+<div style="background:#fff;border:1px solid #E4E1D6;border-radius:1rem;padding:1rem"><p style="font-size:.7rem;color:#64748B;font-weight:700">CONVERSATIONS</p><p style="font-family:Manrope;font-weight:800;font-size:1.6rem;color:#1B1F4B">{{ count }}</p></div>
+<div style="background:#fff;border:1px solid #E4E1D6;border-radius:1rem;padding:1rem"><p style="font-size:.7rem;color:#64748B;font-weight:700">QUESTIONS ASKED</p><p style="font-family:Manrope;font-weight:800;font-size:1.6rem;color:#1B1F4B">{{ messages }}</p></div>
+</div>
+<h3 style="font-family:Manrope;color:#1B1F4B" class="mb-2">Recent topics explored</h3>
+<ul style="font-size:.88rem;color:#0F172A">{% for t in topics %}<li>• {{ t }}</li>{% empty %}<li>No conversations yet.</li>{% endfor %}</ul>
+{% else %}<p style="color:#64748B">No learner is linked to your account yet. Ask your school administrator to link your child's account as your ward.</p>{% endif %}
+</div>{% endblock %}

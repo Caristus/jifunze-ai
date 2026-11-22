@@ -32,9 +32,9 @@
         <a href="/studio/" class="hover:text-teal-400 transition-colors">Teacher Studio</a>
       {% endif %}
       {% if user.role == 'school_admin' or user.role == 'admin' %}
-        <a href="/governance/" class="hover:text-teal-400 transition-colors">Sovereignty</a>
+        <a href="/sovereignty/" class="hover:text-teal-400 transition-colors">Sovereignty</a>
         <a href="/health/" class="hover:text-teal-400 transition-colors">Health</a>
-        <a href="/onboard/" class="hover:text-teal-400 transition-colors">Bulk Onboard</a>
+        <a href="/onboard/" class="hover:text-teal-400 transition-colors">Analytics</a><a href="/approvals/">Approvals</a><a href="/community/">Community</a><a href="/api/docs/">API</a><a href="#">Bulk Onboard</a>
         <a href="/ai-config/" class="hover:text-teal-400 transition-colors">AI Settings</a>
       {% endif %}
       <a href="/admin/" class="text-slate-400 hover:text-white transition-colors" title="Django Admin">
@@ -221,6 +221,39 @@
     }).catch(function(){ card.remove(); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
+})();
+</script>
+<script>
+/* JF_LIB_TOOLS */
+(function(){
+  function csrf(){return (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||"";}
+  var role=(document.querySelector('meta[name="user-role"]')||{}).content||"";
+  if(location.pathname.indexOf("/library/")===0){
+    var form=document.querySelector("form");
+    if(form&&!document.getElementById("bmOnly")){
+      var lab=document.createElement("label");lab.style.cssText="display:flex;gap:.4rem;align-items:center;font-size:.78rem;font-weight:600;align-self:center";
+      lab.innerHTML='<input type="checkbox" id="bmOnly" name="bookmarks" value="1"> Bookmarks only';
+      form.appendChild(lab);
+    }
+    setTimeout(function(){
+      document.querySelectorAll(".lb-card[data-id]").forEach(function(card){
+        if(card.querySelector(".libstar"))return;
+        var bar=card.querySelector(".mt-auto")||card;
+        var star=document.createElement("button");star.className="libstar";star.textContent="☆ Bookmark";
+        star.style.cssText="border:1px solid var(--line,#E4E1D6);background:#fff;border-radius:.5rem;padding:.3rem .6rem;font-size:.72rem;font-weight:700;cursor:pointer";
+        var share=document.createElement("button");share.textContent="🌐 Share";
+        share.style.cssText=star.style.cssText;
+        star.onclick=function(){fetch("/bookmark/toggle/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":csrf(),"Content-Type":"application/json"},body:JSON.stringify({id:card.dataset.id})}).then(function(r){return r.json();}).then(function(j){star.textContent=j.on?"★ Bookmarked":"☆ Bookmark";});};
+        share.onclick=function(){fetch("/share/toggle/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":csrf(),"Content-Type":"application/json"},body:JSON.stringify({id:card.dataset.id,on:!share.dataset.on})}).then(function(r){return r.json();}).then(function(j){share.dataset.on=j.on?"1":"";share.textContent=j.on?"🌐 Shared":"🌐 Share";});};
+        bar.appendChild(star);bar.appendChild(share);
+      });
+    },300);
+  }
+  if(role==="parent"&&!document.getElementById("parentBanner")){
+    var b=document.createElement("div");b.id="parentBanner";b.style.cssText="background:#EEF2FF;border-bottom:1px solid #C7D2FE;padding:.5rem 1rem;font-size:.8rem;font-weight:600;color:#3730A3;text-align:center";
+    b.innerHTML='Parent portal: <a href="/parent/" style="color:#3730A3;text-decoration:underline">view your child\'s learning progress</a>';
+    document.body.insertBefore(b,document.body.firstChild);
+  }
 })();
 </script>
 </body>
