@@ -1,13 +1,87 @@
 from .base import BaseProvider
 import json
+import re as _re
 KNOWLEDGE = [
-    (("atom",), "An atom is the smallest unit of an element that keeps its chemical properties. It has a nucleus (protons + neutrons) surrounded by electrons in energy levels (shells). The number of protons (atomic number) defines the element. Atoms join by bonds to form molecules."),
-    (("photosynthesis",), "Photosynthesis is how green plants turn light energy into chemical energy: 6CO2 + 6H2O + light -> C6H12O6 + 6O2. It happens in chloroplasts; chlorophyll absorbs mainly red and blue light. Light-dependent reactions split water and make ATP/NADPH; the Calvin cycle then fixes CO2 into glucose."),
-    (("molecule",), "A molecule is two or more atoms chemically bonded, e.g. H2O or O2. Bonds can be covalent (sharing electrons) or ionic (transferring electrons)."),
-    (("cell",), "The cell is the basic unit of life. Plant cells have a cell wall, chloroplasts and a large vacuole; animal cells do not. Both have a nucleus, cytoplasm and cell membrane."),
-    (("force", "newton"), "A force is a push or pull that changes motion or shape. Its unit is the newton (N). Newton's second law gives F = ma."),
-    (("fraction",), "A fraction is part of a whole: numerator over denominator. To add fractions, first find a common denominator; equivalent fractions have equal value."),
+    (("photosynthesis",), "Photosynthesis is how green plants turn light energy into chemical energy (glucose). It happens in chloroplasts, where chlorophyll absorbs mainly red and blue light. The overall equation is 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂. The process has two stages: the light-dependent reactions split water and produce ATP and NADPH, then the Calvin cycle uses those to fix CO₂ into glucose."),
+    (("brownian",), "Brownian motion is the random, jittery movement of tiny suspended particles caused by collisions with the molecules of the surrounding fluid. You see it when, for example, smoke particles under a microscope wiggle unpredictably — that wiggle is evidence that the fluid molecules themselves are moving, which helped prove the existence of atoms."),
+    (("activation energy",), "Activation energy is the minimum energy that reacting particles must have for a reaction to start. Think of it as the hill a reaction must climb before it can roll down. Catalysts work by lowering that hill, so more particles have enough energy and the reaction speeds up."),
+    (("atom",), "An atom is the smallest unit of an element that keeps its chemical properties. It has a dense nucleus of protons (positive) and neutrons (neutral), with negatively charged electrons orbiting in shells. The number of protons (the atomic number) defines the element."),
+    (("molecule",), "A molecule is two or more atoms chemically bonded together, like H₂O or O₂. Bonds can be covalent (sharing electrons) or ionic (transferring electrons)."),
+    (("cell",), "The cell is the basic unit of life. Plant cells have a cell wall, chloroplasts and a large permanent vacuole; animal cells do not. Both have a nucleus, cytoplasm and cell membrane."),
+    (("force", "newton"), "A force is a push or pull that can change an object's motion or shape. Its unit is the newton (N). Newton's second law gives F = ma."),
+    (("fraction",), "A fraction is a part of a whole: numerator over denominator. To add fractions, first find a common denominator; equivalent fractions (like 1/2 and 2/4) have equal value."),
+    (("first world war", "ww1", "wwi"), "The First World War (1914–1918) was triggered by the assassination of Archduke Franz Ferdinand of Austria-Hungary in Sarajevo. Deeper causes included militarism, the alliance system (Triple Entente vs Triple Alliance), imperialism and nationalism. It ended with the Treaty of Versailles in 1919."),
+    (("kenya", "independence"), "Kenya gained independence from Britain on 12 December 1963 after the Mau Mau uprising and years of political struggle led by Jomo Kenyatta and others."),
+    (("equation", "algebra"), "An equation states that two expressions are equal. To solve, isolate the unknown by applying inverse operations to both sides until the variable stands alone."),
 ]
+def _level_band(grade):
+    g = (grade or "").lower()
+    if any(k in g for k in ("pp1", "pp2", "kg", "grade r", "pre")):
+        return "early"
+    m = _re.search(r"\d+", g)
+    n = int(m.group()) if m else 0
+    if "form" in g or _re.match(r"^s\d", g):
+        return "junior" if n <= 2 else "senior"
+    if "jss" in g or "myp" in g:
+        return "junior"
+    if "sss" in g or "shs" in g or "dp" in g or "year" in g:
+        return "senior"
+    if "stage" in g:
+        return "primary" if n <= 6 else "junior"
+    if "standard" in g or "primary" in g:
+        return "primary"
+    if "basic" in g:
+        return "primary" if n <= 6 else "junior"
+    if "grade" in g:
+        return "primary" if n <= 6 else ("junior" if n <= 9 else "senior")
+    return "junior"
+LEVEL_STYLE = {
+    "early": {
+        "en": {"tone": "Let's explore this together!",
+               "close": "Can you draw a picture of what we just talked about?",
+               "len": 3},
+        "sw": {"tone": "Tuchunguze hili pamoja!",
+               "close": "Je, unaweza kuchora picha ya tulichozungumza?",
+               "len": 3},
+    },
+    "primary": {
+        "en": {"tone": "Here's a clear way to think about it.",
+               "close": "Want a quick practice question to check you've got it?",
+               "len": 4},
+        "sw": {"tone": "Hii hapa ni njia wazi ya kufikiria.",
+               "close": "Ungependa swali fupi la mazoezi?",
+               "len": 4},
+    },
+    "junior": {
+        "en": {"tone": "Let me break this down properly.",
+               "close": "Want me to show a worked example or set a past-paper question?",
+               "len": 5},
+        "sw": {"tone": "Niruhusu nikufafanulie vizuri.",
+               "close": "Ungependa mfano uliofanywa au swali la mtihani uliopita?",
+               "len": 5},
+    },
+    "senior": {
+        "en": {"tone": "Here's a precise, exam-ready explanation.",
+               "close": "Want an exam-style question with a mark scheme, or a deeper extension?",
+               "len": 6},
+        "sw": {"tone": "Huu hapa ni ufafanuzi sahihi wa mtihani.",
+               "close": "Ungependa swali la mtihani na rubriki, au mada ya upanuzi?",
+               "len": 6},
+    },
+}
+def _match(q):
+    ql = q.lower()
+    for keys, val in KNOWLEDGE:
+        if any(k in ql for k in keys):
+            return val
+    return None
+def _style_from_context(context, question):
+    """Pull a couple of useful facts out of raw context without dumping it."""
+    text = (context or "") + " " + (question or "")
+    sents = [s.strip() for s in _re.split(r"[.!?]\n?|\n", text) if len(s.strip()) > 20]
+    low = question.lower()
+    ranked = sorted(sents, key=lambda s: -sum(1 for w in _re.findall(r"\w+", low) if len(w) > 3 and w in s.lower()))
+    return ranked[:2]
 class MockProvider(BaseProvider):
     provider_name = "mock"
     def __init__(self):
@@ -18,6 +92,7 @@ class MockProvider(BaseProvider):
         grade = kwargs.get("grade_level", "")
         lang = kwargs.get("language", "en")
         atype = kwargs.get("artifact_type", "")
+        subject = kwargs.get("subject", "General")
         if mode == "teacher":
             topic = kwargs.get("topic", "the topic")
             if atype == "lesson_plan":
@@ -36,34 +111,43 @@ class MockProvider(BaseProvider):
                     "teacher_notes": "Check prior knowledge first.",
                 }, indent=2)
             return "# " + topic.title() + "\n\nTeaching material for " + cur + "."
-        # ---- LEARNER MODE: a real, grounded, friendly answer ----
+        # ---------- LEARNER MODE: direct, conversational, level-aware ----------
         text = prompt or ""
         if "Learner question:" in text:
             question = text.split("Learner question:")[-1].strip()
-            context = text.split("Learner question:")[0].replace("Context from approved school materials:", "").strip()
+            raw_context = text.split("Learner question:")[0].split("Context")[0].strip()
         else:
             question = text.strip()
-            context = ""
-        q = question.lower()
-        body = None
-        for keys, val in KNOWLEDGE:
-            if any(k in q for k in keys):
-                body = val
-                break
-        if body is None:
-            body = ("A clear way to think about \"" + question + "\":\n"
-                    "1. Define the key term in your own words.\n"
-                    "2. Identify the main parts or steps.\n"
-                    "3. Connect it to a real-life example.\n"
-                    "4. Test yourself with one practice question.")
+            raw_context = ""
         sw = (lang == "sw")
-        lines = []
-        if context:
-            lines.append("Kulingana na nyenzo za shule yako:" if sw else "Based on your school's approved materials:")
-            lines.append(context[:400])
+        band = _level_band(grade)
+        style = LEVEL_STYLE.get(band, LEVEL_STYLE["junior"])
+        st = style["sw"] if sw else style["en"]
+        body = _match(question)
+        if body is None:
+            hints = _style_from_context(raw_context, question)
+            if hints:
+                body = hints[0] + (" " + hints[1] if len(hints) > 1 else "")
+            else:
+                q_clean = question.strip("? ").strip(".")
+                body = (
+                    "A good way to think about " + q_clean + " is to start with the definition, then identify the key parts, then connect it to a real-life example."
+                    if not sw else
+                    "Njia nzuri ya kufikiria " + q_clean + " ni kuanza na ufafanuzi, kisha kutambua sehemu muhimu, kisha kuiunganisha na mfano wa maisha halisi."
+                )
+        lines = [
+            st["tone"],
+            "",
+            body,
+        ]
+        if subject and subject != "General":
             lines.append("")
-        lines.append(("Kwa lugha rahisi (" if sw else "In simple terms (") + cur + ((", " + grade) if grade else "") + "):")
-        lines.append(body)
+            lines.append(
+                ("(Somo: " + subject + " · " if sw else "(" + subject + " · ") + cur + " · " + str(grade or "—" ) + ")"
+            )
+        else:
+            lines.append("")
+            lines.append("(" + cur + " · " + str(grade or "—") + ")")
         lines.append("")
-        lines.append("Je, ungependa mfano au swali la mazoezi?" if sw else "Would you like a worked example or a quick practice question on this?")
+        lines.append(st["close"])
         return "\n".join(lines)

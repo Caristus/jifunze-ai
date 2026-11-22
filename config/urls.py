@@ -1,3 +1,4 @@
+from apps.learning import ask_views
 from apps.learning import progress_views
 from apps.resources import semantic_views
 from apps.resources import library_views
@@ -34,6 +35,9 @@ urlpatterns = [
     path("library/", library_views.library_page, name="library"),
     path("api/learn/progress/", progress_views.progress),
     path("api/resources/semantic_search/", semantic_views.search),
+    path("api/learn/ask/", ask_views.ask),
+    path("api/learn/has_sources/", ask_views.has_sources),
+    path("api/learn/history/", ask_views.history),
     path("offline/", lambda request: __import__("django.shortcuts").shortcuts.render(request, "offline.html"), name="offline"),
 ]
 if settings.DEBUG:

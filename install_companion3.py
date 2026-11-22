@@ -1,0 +1,238 @@
+﻿from pathlib import Path
+base = Path(r"C:\Users\ESTHER M\Documents\jifunze_ai")
+# ---------- 1. Level-aware + subject-aware mock tutor ----------
+mp = base / "apps/ai_gateway/providers/mock_provider.py"
+ms = mp.read_text(encoding="utf-8")
+HELPERS = '''
+def _level_band(grade):
+    g = (grade or "").lower()
+    if any(k in g for k in ("pp1", "pp2", "kg", "grade r", "pre")):
+        return "early"
+    import re as _re
+    m = _re.search(r"\\d+", g)
+    n = int(m.group()) if m else 0
+    if "form" in g or _re.match(r"^s\\d", g):
+        return "junior" if n <= 2 else "senior"
+    if "jss" in g or "myp" in g:
+        return "junior"
+    if "sss" in g or "shs" in g or "dp" in g or "year" in g:
+        return "senior"
+    if "stage" in g:
+        return "primary" if n <= 6 else "junior"
+    if "standard" in g or "primary" in g:
+        return "primary"
+    if "basic" in g:
+        return "primary" if n <= 6 else "junior"
+    if "grade" in g:
+        return "primary" if n <= 6 else ("junior" if n <= 9 else "senior")
+    return "junior"
+LEVEL_NOTES = {
+    "early": {"en": "Level: early years - I will use pictures, songs and very simple words.",
+              "sw": "Kiwango: miaka ya awali - nitatumia picha, nyimbo na maneno rahisi sana."},
+    "primary": {"en": "Level: primary - short sentences, everyday examples and key words in bold.",
+                "sw": "Kiwango: msingi - sentensi fupi, mifano ya kila siku na maneno muhimu."},
+    "junior": {"en": "Level: junior secondary - clear definitions, one worked example and a check question.",
+               "sw": "Kiwango: sekondari ya chini - ufafanuzi wazi, mfano mmoja na swali la kujiri."},
+    "senior": {"en": "Level: senior secondary - precise terminology, equations and exam-style reasoning.",
+               "sw": "Kiwango: sekondari ya juu - istilahi sahihi, milinganyo na hoja za mtihani."},
+}
+'''
+if "_level_band" not in ms:
+    ms = ms.replace("class MockProvider(BaseProvider):", HELPERS.strip() + "\n\n\nclass MockProvider(BaseProvider):", 1)
+old = "        lines.append(body)\n"
+new = '''        band = _level_band(grade)
+        note = LEVEL_NOTES.get(band, {})
+        if note:
+            lines.append(note.get("sw") if sw else note.get("en", ""))
+        lines.append(body)
+        if kwargs.get("subject"):
+            lines.append(("Somo: " if sw else "Subject focus: ") + str(kwargs["subject"]) + ".")
+'''
+if "Subject focus:" not in ms:
+    ms = ms.replace(old, new, 1)
+    mp.write_text(ms, encoding="utf-8")
+# ---------- 2. ask_views: subject-boosted retrieval + level/subject passed to provider ----------
+av = base / "apps/learning/ask_views.py"
+avs = av.read_text(encoding="utf-8")
+avs = avs.replace('''def _retrieve(institution, question, k=3):
+    qt = _tokens(question)
+    if not qt:
+        return []
+    scored = []
+    for c in DocumentChunk.objects.filter(resource__institution=institution).select_related("resource")[:400]:
+        ct = set(_tokens(c.chunk_text))
+        hit = len([t for t in qt if t in ct])
+        if hit:
+            scored.append((hit / float(len(qt)), c))
+    scored.sort(key=lambda x: -x[0])
+    return [c for s, c in scored if s > 0][:k]''',
+'''def _retrieve(institution, question, k=3, subject=""):
+    qt = _tokens(question)
+    if not qt:
+        return []
+    scored = []
+    for c in DocumentChunk.objects.filter(resource__institution=institution).select_related("resource")[:400]:
+        ct = set(_tokens(c.chunk_text))
+        hit = len([t for t in qt if t in ct])
+        if hit:
+            score = hit / float(len(qt))
+            if subject and subject != "General" and getattr(c.resource, "subject", "") == subject:
+                score *= 1.6
+            scored.append((score, c))
+    scored.sort(key=lambda x: -x[0])
+    return [c for s, c in scored if s > 0][:k]''', 1)
+avs = avs.replace("    chunks = _retrieve(m.institution, q)\n",
+                  '    subject = (data.get("subject") or "General").strip()\n    chunks = _retrieve(m.institution, q, 3, subject)\n', 1)
+avs = avs.replace('        mode="learner", curriculum=data.get("curriculum", ""), grade_level=data.get("grade", ""),\n        language=data.get("language", "en"))',
+                  '        mode="learner", curriculum=data.get("curriculum", ""), grade_level=data.get("grade", ""),\n        language=data.get("language", "en"), subject=subject)', 1)
+av.write_text(avs, encoding="utf-8")
+# ---------- 3. Polished Qwen-style Companion UI ----------
+TPL = '''{% extends "base.html" %}
+{% block title %}Learning Companion — JIFUNZE AI{% endblock %}
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--indigo:#1B1F4B;--indigo2:#2A3070;--green:#10B981;--green2:#0E9F6E;--bg:#FDFCF8;--card:#fff;--ink:#0F172A;--mut:#64748B;--line:#E4E1D6;--soft:#F6F4EC;--champ:#C9A227;}
+  *{scrollbar-width:thin;scrollbar-color:#C9C4B4 #EFEDE6;}
+  *::-webkit-scrollbar{width:9px;height:9px;}*::-webkit-scrollbar-track{background:#EFEDE6;}*::-webkit-scrollbar-thumb{background:#C9C4B4;border-radius:8px;border:2px solid #EFEDE6;}*::-webkit-scrollbar-thumb:hover{background:var(--indigo);}
+  .cp{font-family:Inter,sans-serif;color:var(--ink);}
+  .cp-head{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem;margin-bottom:1rem;}
+  .cp-head h1{font-family:Manrope;font-weight:800;font-size:1.7rem;color:var(--indigo);margin:0;}
+  .lvl{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;font-weight:700;background:#EEF0F6;color:#3B4270;border:1px solid var(--line);border-radius:9999px;padding:.3rem .75rem;}
+  .cp-grid{display:grid;grid-template-columns:290px 1fr;gap:1.1rem;height:calc(100vh - 210px);min-height:520px;}
+  @media(max-width:940px){.cp-grid{grid-template-columns:1fr;height:auto;}.cp-side{order:2;}}
+  .cp-side{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1rem;overflow-y:auto;}
+  .cp-side label{display:block;font-size:.66rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin:.85rem 0 .3rem;}
+  .cp-side select{width:100%;border:1px solid var(--line);border-radius:.6rem;padding:.55rem .6rem;font-size:.85rem;background:#fff;}
+  .cp-side select:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(27,31,75,.12);}
+  .cp-main{background:var(--card);border:1px solid var(--line);border-radius:1rem;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 6px 18px -8px rgba(27,31,75,.14);}
+  .cp-msgs{flex:1;overflow-y:auto;padding:1.3rem;display:flex;flex-direction:column;gap:1.05rem;background:radial-gradient(900px 400px at 90% -10%,rgba(27,31,75,.05),transparent 60%),var(--bg);}
+  .row{display:flex;gap:.7rem;align-items:flex-end;}
+  .row.user{justify-content:flex-end;}
+  .ava{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;}
+  .ava.ai{background:linear-gradient(135deg,var(--indigo),#4550A6);}
+  .ava.us{background:var(--green2);}
+  .bub{max-width:76%;padding:.85rem 1.05rem;border-radius:1.05rem;font-size:.93rem;line-height:1.6;white-space:pre-wrap;}
+  .bub.user{background:var(--green2);color:#fff;border-bottom-right-radius:.3rem;}
+  .bub.ai{background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:.3rem;box-shadow:0 3px 10px -6px rgba(27,31,75,.2);}
+  .trace{align-self:flex-start;background:var(--soft);border:1px dashed var(--line);border-radius:.8rem;padding:.6rem .9rem;font-size:.78rem;color:var(--mut);display:flex;flex-direction:column;gap:.3rem;max-width:80%;}
+  .trace .step{display:flex;align-items:center;gap:.5rem;}
+  .trace .step.done{color:var(--green2);}
+  .spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--indigo);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .ok{width:13px;height:13px;border-radius:50%;background:var(--green);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;}
+  .meta{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.45rem;}
+  .src{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;font-weight:700;background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;border-radius:9999px;padding:.2rem .6rem;text-decoration:none;}
+  .src.web{background:#E0E7FF;color:#3730A3;border-color:#C7D2FE;}
+  .acts{display:flex;gap:.5rem;margin-top:.35rem;}
+  .acts button{border:none;background:none;cursor:pointer;color:var(--mut);font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:.25rem;padding:.15rem .3rem;border-radius:.4rem;}
+  .acts button:hover{color:var(--indigo);background:var(--soft);}
+  .cp-input{display:flex;gap:.6rem;padding:.95rem;border-top:1px solid var(--line);background:#fff;align-items:flex-end;}
+  .cp-input textarea{flex:1;border:1px solid var(--line);border-radius:.85rem;padding:.75rem .9rem;font:inherit;font-size:.93rem;resize:none;min-height:48px;max-height:140px;background:var(--soft);}
+  .cp-input textarea:focus{outline:none;border-color:var(--indigo);background:#fff;box-shadow:0 0 0 3px rgba(27,31,75,.12);}
+  .cp-send{background:var(--indigo);color:#fff;border:none;border-radius:.85rem;height:48px;padding:0 1.2rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.45rem;transition:.15s;}
+  .cp-send:hover{background:var(--indigo2);}
+  .cp-send:disabled{opacity:.6;cursor:wait;}
+  .cv-item{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:.6rem;padding:.5rem .65rem;margin-top:.4rem;background:#fff;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--ink);}
+  .cv-item:hover,.cv-item.active{background:var(--soft);border-color:var(--indigo);}
+  .empty{margin:auto;text-align:center;max-width:520px;padding:2rem 1rem;}
+  .empty h2{font-family:Manrope;font-weight:800;color:var(--indigo);font-size:1.35rem;margin-bottom:.4rem;}
+  .empty p{color:var(--mut);font-size:.88rem;margin-bottom:1.1rem;}
+  .sug{display:inline-block;border:1px solid var(--line);background:#fff;border-radius:9999px;padding:.45rem .9rem;font-size:.8rem;font-weight:600;color:var(--indigo);cursor:pointer;margin:.2rem;transition:.15s;}
+  .sug:hover{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+  .newbtn{width:100%;background:var(--green2);color:#fff;border:none;border-radius:.7rem;padding:.65rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;}
+  .newbtn:hover{background:#0b8457;}
+</style>
+<div class="cp max-w-7xl mx-auto px-4 py-6">
+  <div class="cp-head">
+    <h1>Learning Companion</h1>
+    <span class="lvl" id="levelChip">Answering at: — </span>
+    <span class="lvl" style="background:#DCFCE7;color:#166534;border-color:#BBF7D0">School-first · web fallback</span>
+  </div>
+  <div class="cp-grid">
+    <aside class="cp-side">
+      <button id="newBtn" class="newbtn">+ New conversation</button>
+      <label>Subject</label><select id="subj"></select>
+      <label>Curriculum</label><select id="curr"></select>
+      <label>Grade / level</label><select id="grade"></select>
+      <label>History</label>
+      <div id="cvList">{% for c in conversations %}<button class="cv-item" data-id="{{ c.id }}">{{ c.title|truncatechars:36 }}</button>{% endfor %}</div>
+    </aside>
+    <section class="cp-main">
+      <div class="cp-msgs" id="msgs">
+        <div class="empty" id="empty">
+          <h2>Karibu! What shall we learn today?</h2>
+          <p>I answer from your school's approved materials first. If the library doesn't cover it, I consult open knowledge (Wikipedia / OpenAI) and always show you the source — explained at your selected level.</p>
+          <span class="sug">Explain photosynthesis</span><span class="sug">What is an atom?</span><span class="sug">Solve 1/2 + 1/4</span><span class="sug">Brownian motion</span><span class="sug">Causes of the First World War</span>
+        </div>
+      </div>
+      <div class="cp-input">
+        <textarea id="q" rows="1" placeholder="Ask anything about your school subjects…  (Enter to send, Shift+Enter for a new line)"></textarea>
+        <button id="send" class="cp-send">Send ➤</button>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+(function(){
+  var SUBJECTS=["General","Biology","Chemistry","Physics","Mathematics","English","Kiswahili","History","Geography","CRE","IRE","Business Studies","Computer Science","Agriculture","Home Science","Art & Craft","Music","Physical Education","Literature in English","French"];
+  var CURR=["CBC/CBE","8-4-4","Cambridge IGCSE","IB","CAPS","NECTA","NCDC","NERDC","NaCCA","ZIMSEC","WAEC","Edexcel","Common Core"];
+  function seq(p,a,b){var r=[];for(var i=a;i<=b;i++)r.push(p+" "+i);return r;}
+  var GRADES={"CBC/CBE":[{g:"Pre-Primary",o:["PP1","PP2"]},{g:"Primary",o:seq("Grade",1,6)},{g:"Junior School",o:seq("Grade",7,9)},{g:"Senior School",o:seq("Grade",10,12)}],"8-4-4":[{g:"Primary",o:seq("Standard",1,8)},{g:"Secondary",o:seq("Form",1,4)}],"Cambridge IGCSE":[{g:"Primary",o:seq("Stage",1,6)},{g:"Lower Secondary",o:seq("Stage",7,9)},{g:"IGCSE",o:["Year 10","Year 11"]},{g:"Advanced",o:["AS Level (Year 12)","A Level (Year 13)"]}],"IB":[{g:"PYP",o:seq("PYP",1,5)},{g:"MYP",o:seq("MYP",1,5)},{g:"DP",o:["DP 1","DP 2"]}],"CAPS":[{g:"Foundation",o:["Grade R"].concat(seq("Grade",1,3))},{g:"Intermediate",o:seq("Grade",4,6)},{g:"Senior",o:seq("Grade",7,9)},{g:"FET",o:seq("Grade",10,12)}],"NECTA":[{g:"Primary",o:["Standard I","Standard II","Standard III","Standard IV","Standard V","Standard VI","Standard VII"]},{g:"O-Level",o:seq("Form",1,4)},{g:"A-Level",o:["Form 5","Form 6"]}],"NCDC":[{g:"Primary",o:seq("P",1,7)},{g:"O-Level",o:seq("S",1,4)},{g:"A-Level",o:["S5","S6"]}],"NERDC":[{g:"Primary",o:seq("Primary",1,6)},{g:"Junior Secondary",o:seq("JSS",1,3)},{g:"Senior Secondary",o:seq("SSS",1,3)}],"NaCCA":[{g:"KG & Primary",o:["KG 1","KG 2"].concat(seq("Basic",1,6))},{g:"JHS",o:seq("Basic",7,9)},{g:"SHS",o:seq("SHS",1,3)}],"ZIMSEC":[{g:"Primary",o:seq("Grade",1,7)},{g:"O-Level",o:seq("Form",1,4)},{g:"A-Level",o:["Form 5","Form 6"]}],"WAEC":[{g:"Junior",o:seq("JSS",1,3)},{g:"Senior",o:seq("SSS",1,3)}],"Edexcel":[{g:"Primary",o:seq("Stage",1,6)},{g:"Lower Secondary",o:seq("Stage",7,9)},{g:"IGCSE",o:["Year 10","Year 11"]},{g:"Advanced",o:["AS Level (Year 12)","A Level (Year 13)"]}],"Common Core":[{g:"Elementary",o:["Kindergarten"].concat(seq("Grade",1,5))},{g:"Middle",o:seq("Grade",6,8)},{g:"High",o:seq("Grade",9,12)}]};
+  var DEF={"CBC/CBE":"Grade 8","8-4-4":"Form 2","Cambridge IGCSE":"Year 10","IB":"MYP 3","CAPS":"Grade 10","NECTA":"Form 2","NCDC":"S2","NERDC":"JSS 2","NaCCA":"Basic 8","ZIMSEC":"Form 2","WAEC":"SSS 2","Edexcel":"Year 10","Common Core":"Grade 8"};
+  var subj=document.getElementById("subj"),curr=document.getElementById("curr"),grade=document.getElementById("grade"),chip=document.getElementById("levelChip");
+  subj.innerHTML=SUBJECTS.map(function(s){return "<option>"+s+"</option>";}).join("");
+  curr.innerHTML=CURR.map(function(c){return "<option>"+c+"</option>";}).join("");
+  curr.value="CBC/CBE";
+  function popGrades(){var g=GRADES[curr.value]||GRADES["CBC/CBE"];var prev=grade.value;grade.innerHTML=g.map(function(x){return '<optgroup label="'+x.g+'">'+x.o.map(function(v){return "<option>"+v+"</option>";}).join("")+"</optgroup>";}).join("");var all=g.reduce(function(a,x){return a.concat(x.o);},[]);var d=DEF[curr.value]||all[0];grade.value=all.indexOf(prev)>=0?prev:d;sync();}
+  function sync(){chip.textContent="Answering at: "+grade.value+" · "+curr.value+" · "+subj.value;}
+  curr.addEventListener("change",popGrades);subj.addEventListener("change",sync);grade.addEventListener("change",sync);
+  popGrades();
+  var msgs=document.getElementById("msgs"),q=document.getElementById("q"),send=document.getElementById("send"),convId=null;
+  function csrf(){return (document.cookie.match(/csrftoken=([^;]+)/)||[])[1]||"";}
+  function scroll(){msgs.scrollTop=msgs.scrollHeight;}
+  function killEmpty(){var e=document.getElementById("empty");if(e)e.remove();}
+  function row(cls){var r=document.createElement("div");r.className="row "+cls;msgs.appendChild(r);return r;}
+  function aiBubble(text){killEmpty();var r=row("ai");r.innerHTML='<div class="ava ai">J</div>';var b=document.createElement("div");b.className="bub ai";b.textContent=text;r.appendChild(b);scroll();return b;}
+  function userBubble(text){killEmpty();var r=row("user");var b=document.createElement("div");b.className="bub user";b.textContent=text;r.appendChild(b);var a=document.createElement("div");a.className="ava us";a.textContent="Me";r.appendChild(a);scroll();}
+  function traceBubble(){killEmpty();var t=document.createElement("div");t.className="trace";msgs.appendChild(t);scroll();return t;}
+  function step(t,text,done){var s=document.createElement("div");s.className="step"+(done?" done":"");s.innerHTML=(done?'<span class="ok">✓</span>':'<span class="spin"></span>')+"<span>"+text+"</span>";t.appendChild(s);scroll();return s;}
+  function finish(s){var sp=s.querySelector(".spin");if(sp){s.classList.add("done");sp.outerHTML='<span class="ok">✓</span>';}}
+  function metaRow(bubble,sources,web){var m=document.createElement("div");m.className="meta";(sources||[]).forEach(function(t){var s=document.createElement("span");s.className="src";s.textContent="📄 "+t;m.appendChild(s);});if(web){var a=document.createElement("a");a.className="src web";a.textContent="🌐 "+web.engine+" · "+web.title;a.href=web.url||"#";a.target="_blank";m.appendChild(a);}bubble.parentNode.appendChild(m);
+    var acts=document.createElement("div");acts.className="acts";acts.innerHTML='<button data-c="1">⧉ Copy</button>';acts.querySelector("button").onclick=function(){navigator.clipboard.writeText(bubble.textContent);this.textContent="✓ Copied";};bubble.parentNode.appendChild(acts);scroll();}
+  function ask(text){
+    text=(text||q.value).trim();if(!text)return;q.value="";send.disabled=true;
+    userBubble(text);
+    var t=traceBubble();
+    var s1=step(t,"Searching your school library…");
+    fetch("/api/learn/has_sources/?q="+encodeURIComponent(text),{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(p){
+      finish(s1);
+      if(p.count){step(t,"Found "+p.count+" approved source"+(p.count>1?"s":"")+": "+p.titles.slice(0,2).join(", "),true);}
+      else{step(t,"Not in school library — consulting open knowledge (Wikipedia / OpenAI)…");}
+    }).catch(function(){finish(s1);});
+    var s3=step(t,"Composing answer at "+grade.value+" level…");
+    fetch("/api/learn/ask/",{method:"POST",credentials:"same-origin",headers:{"X-CSRFToken":csrf(),"Content-Type":"application/json"},
+      body:JSON.stringify({question:text,conversation_id:convId,subject:subj.value,curriculum:curr.value,grade:grade.value})})
+      .then(function(r){return r.json();}).then(function(d){
+        finish(s3);setTimeout(function(){t.remove();},600);
+        var b=aiBubble(d.content||"");metaRow(b,d.sources,d.web_source);convId=d.conversation_id;
+      }).catch(function(e){finish(s3);aiBubble("Sorry — something went wrong: "+e.message);})
+      .finally(function(){send.disabled=false;q.focus();});
+  }
+  send.onclick=function(){ask();};
+  q.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();ask();}});
+  q.addEventListener("input",function(){q.style.height="auto";q.style.height=Math.min(140,q.scrollHeight)+"px";});
+  Array.prototype.forEach.call(document.querySelectorAll(".sug"),function(s){s.onclick=function(){ask(s.textContent);};});
+  document.getElementById("newBtn").onclick=function(){convId=null;msgs.innerHTML="";location.hash="";msgs.innerHTML='<div class="empty" id="empty"><h2>Karibu! What shall we learn today?</h2><p>New conversation started.</p></div>';};
+  Array.prototype.forEach.call(document.querySelectorAll(".cv-item"),function(b){b.onclick=function(){
+    Array.prototype.forEach.call(document.querySelectorAll(".cv-item"),function(x){x.classList.remove("active");});b.classList.add("active");
+    convId=b.dataset.id;msgs.innerHTML="";
+    fetch("/api/learn/history/?id="+convId,{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(j){
+      (j.messages||[]).forEach(function(m){ if(m.role==="user")userBubble(m.content); else {var b=aiBubble(m.content);metaRow(b,m.sources,null);} });
+      if(!(j.messages||[]).length)aiBubble("(empty conversation)");
+    });};});
+})();
+</script>
+{% endblock %}'''
+(base / "templates/learning/companion.html").write_text(TPL, encoding="utf-8")
+print("COMPANION POLISHED: level-aware, full subject/grade dropdowns, Qwen-style trace")
