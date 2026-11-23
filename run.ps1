@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location -LiteralPath $PSScriptRoot
 $venvPy = Join-Path $PSScriptRoot "venv\Scripts\python.exe"
+$env:PYTHONWARNINGS = "ignore::FutureWarning"
 function Test-PortBusy([int]$p) {
     try {
         $c = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue
@@ -50,18 +51,19 @@ while (Test-PortBusy $Port) {
 $bind = "127.0.0.1"
 if ($Lan) { $bind = "0.0.0.0" }
 $url = "http://127.0.0.1:$Port/"
-$lan = ""
+$lanUrl = ""
 if ($Lan) {
     $ip = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
         Where-Object { $_.IPAddress -like "192.168.*" -or $_.IPAddress -like "10.*" -or $_.IPAddress -like "172.*" } |
         Select-Object -First 1
-    if ($ip) { $lan = "http://" + $ip.IPAddress + ":$Port/"
-}
+    if ($ip) {
+        $lanUrl = "http://" + $ip.IPAddress + ":$Port/"
+    }
 }
 Write-Host ""
 Write-Host "  JIFUNZE AI is starting" -ForegroundColor Green
 Write-Host ("  local : " + $url) -ForegroundColor White
-if ($lan) { Write-Host ("  phone : " + $lan) -ForegroundColor White }
+if ($lanUrl) { Write-Host ("  phone : " + $lanUrl) -ForegroundColor White }
 Write-Host "  stop  : Ctrl+C" -ForegroundColor DarkGray
 Write-Host ""
 $job = $null
