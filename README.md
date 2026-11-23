@@ -1,3 +1,10 @@
+
+## One-click run
+
+- **Windows Explorer:** double-click `run.cmd` (or `run-lan.cmd` for phone access).
+- **Terminal:** `.\run.ps1` &nbsp;|&nbsp; phone: `.\run.ps1 -Lan` &nbsp;|&nbsp; custom port: `.\run.ps1 -Port 8080`
+- **VS Code:** `Ctrl+Shift+B` runs the server task; `F5` starts it under the debugger.
+- **Fresh clone:** `git clone <repo> && cd jifunze-ai && .\run.ps1` - creates the venv, installs deps, migrates and opens the browser.
 ﻿# JIFUNZE AI
 **Intelligence for everyone. Knowledge without boundaries.**
 An open-source, community-governed AI learning infrastructure for African schools.
